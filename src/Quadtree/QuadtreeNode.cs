@@ -7,7 +7,7 @@ namespace Quadtree{
     class QuadtreeNode
     {
         public Rgba32[,]? NodeImage;
-        public (int, int, int, int) BoxBorder; // top, left, right, bottom
+        public (int, int) TopLeft { get; private set; }
         public int Depth { get; private set; }
         public int Width { get; private set; }
         public int Height { get; private set; }
@@ -16,7 +16,6 @@ namespace Quadtree{
 
         public QuadtreeNode(){
             NodeImage = null;
-            BoxBorder = (0, 0, 0, 0);
             Depth = 0;
             Children = null;
             Width = 0;
@@ -26,16 +25,23 @@ namespace Quadtree{
 
         public QuadtreeNode(Rgba32[,] image, (int, int, int, int) bor, int d, (QuadtreeNode, QuadtreeNode, QuadtreeNode, QuadtreeNode)? c = null)
         {
-            BoxBorder = bor;
             Depth = d;
             Children = c;
 
-            var (top, left, right, bottom) = BoxBorder;
+            var (top, left, right, bottom) = bor;
+            TopLeft = (left, top);
             Width = right - left;
             Height = bottom - top;  
             IsLeaf = false;
 
             NodeImage = CropImage(image, top, left, right, bottom);
+        }
+
+        public (int, int, int, int) GetBorders()
+        {
+            var (top, left) = TopLeft;
+            var (right, bottom) = (left + Width, top + Height);
+            return (top, left, right, bottom);
         }
 
         public Rgba32[,] CropImage(Rgba32[,] image, int top, int left, int right, int bottom)
@@ -59,7 +65,7 @@ namespace Quadtree{
                 throw new InvalidOperationException("Node image cannot be null during split.");
             }
 
-            var (top, left, right, bottom) = BoxBorder;
+            var (top, left, right, bottom) = GetBorders();
             int midHor = left + (right - left) / 2;
             int midVer = top + (bottom - top) / 2;
             

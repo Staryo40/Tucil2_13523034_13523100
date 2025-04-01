@@ -51,7 +51,7 @@ namespace Quadtree{
 
             foreach (var node in leafNodes)
             {
-                var (l, t, r, b) = node.BoxBorder;
+                var (l, t, r, b) = node.GetBorders();
                 var box = new Rectangle(
                     (int)(l * m + dx),
                     (int)(t * m + dy),
