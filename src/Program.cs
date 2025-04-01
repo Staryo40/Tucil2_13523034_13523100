@@ -24,7 +24,7 @@ class Program
         #endregion
 
         #region processing
-        Color[,] resultImage = image;
+        Rgba32[,] resultImage = image;
         #endregion
 
         #region outputs
