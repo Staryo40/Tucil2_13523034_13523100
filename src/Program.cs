@@ -24,11 +24,17 @@ class Program
         #endregion
 
         #region processing
+        long startTime = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+
         Rgba32[,] resultImage = image;
+
+        long endTime = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
         #endregion
 
         #region outputs
         OutputHandler.SaveImage(imageOutputPath, resultImage);
+
+        Console.WriteLine("Waktu eksekusi: " + (endTime - startTime) + " ms");
         #endregion
     }
 }
