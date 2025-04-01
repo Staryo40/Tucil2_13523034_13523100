@@ -6,3 +6,5 @@ dotnet build --output ../bin
 
 run - DI SRC
 dotnet ../bin/src.dll
+
+dotnet add package SixLabors.ImageSharp
