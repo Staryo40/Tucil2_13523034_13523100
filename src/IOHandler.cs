@@ -24,6 +24,7 @@ namespace IOHandler
                     if (!File.Exists(absolutePath))
                     {
                         Console.WriteLine("Gambar tidak ditemukan!");
+                        continue;
                     }
 
                     using (Image<Rgba32> image = Image.Load<Rgba32>(absolutePath))
