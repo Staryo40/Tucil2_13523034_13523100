@@ -7,16 +7,19 @@ using SixLabors.ImageSharp.Drawing.Processing;
 namespace Quadtree{
     class QuadtreeTree
     {
-        private Rgba32[,] image;
+        public Rgba32[,] Image { get; private set; }
         private QuadtreeNode root;
         public QuadtreeTree(Rgba32[,] i, int width, int height){
-            image = i;
+            Image = i;
             Console.WriteLine("ran 0");
-            root = new QuadtreeNode(image, (0, 0, width, height), 0, null);
+            root = new QuadtreeNode(this, (0, 0, width, height), 0, null);
             Console.WriteLine("ran 1");
             buildTree(root, 10, 0.5);
             Console.WriteLine("ran 2");
         }
+
+        public Rgba32 GetPixel(int x, int y) => Image[x, y];
+        public Rgba32 GetPixel(int x, int y, (int x, int y) offset) => Image[x + offset.x, y + offset.y];
 
         public void buildTree(QuadtreeNode r, int maxDepth, double errorThreshold){
             if (r.Depth >= maxDepth || r.errorVariance() <= errorThreshold){
@@ -59,11 +62,8 @@ namespace Quadtree{
                     (int)((b - t) * m - 1)
                 );
 
-                if (node.NodeImage != null)
-                {
-                    Rgba32 avgColor = ComputeAverageColor(node.NodeImage);
-                    image.Mutate(ctx => ctx.Fill(avgColor, box));  // Fill with computed color
-                }
+                Rgba32 avgColor = ComputeAverageColor(node);
+                image.Mutate(ctx => ctx.Fill(avgColor, box));  // Fill with computed color
             }
 
             return image;
@@ -97,18 +97,16 @@ namespace Quadtree{
         }
 
 
-        private Rgba32 ComputeAverageColor(Rgba32[,] image)
+        private Rgba32 ComputeAverageColor(QuadtreeNode n)
         {
             long sumR = 0, sumG = 0, sumB = 0;
-            int height = image.GetLength(0);
-            int width = image.GetLength(1);
-            int pixelCount = width * height;
+            int pixelCount = n.Width * n.Height;
 
-            for (int y = 0; y < height; y++)
+            for (int y = 0; y < n.Height; y++)
             {
-                for (int x = 0; x < width; x++)
+                for (int x = 0; x < n.Width; x++)
                 {
-                    var pixel = image[y, x];
+                    var pixel = GetPixel(x, y, n.TopLeft);
                     sumR += pixel.R;
                     sumG += pixel.G;
                     sumB += pixel.B;
