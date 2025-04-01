@@ -8,7 +8,7 @@ class Program
     static void Main()
     {
         #region inputs
-        Color[,] image = InputHandler.GetImage();
+        Rgba32[,] image = InputHandler.GetImage();
 
         int errorMethod = InputHandler.GetErrorMethod();
 
