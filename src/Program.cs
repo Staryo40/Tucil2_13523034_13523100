@@ -1,49 +1,50 @@
-﻿using System;
-using System.IO;
-using Quadtree;
+using IOHandler;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Processing;
+
 
 class Program
 {
     static void Main()
     {
-        string imagePath = "CasPrice.png"; // Path to your .png file
-        string outputImagePath = "ProcessedImage.png"; 
-        
-        try
-        {
-            // Load the image
-            using (Image<Rgba32> image = Image.Load<Rgba32>(imagePath))
-            {
-                int width = image.Width;
-                int height = image.Height;
+        #region inputs
+        (Rgba32[,] image, long oriFileSize) = InputHandler.GetImage();
 
-                Rgba32[,] colorMatrix = new Rgba32[width, height];
+        int errorMethod = InputHandler.GetErrorMethod();
 
-                Console.WriteLine($"Width: {width}");
-                Console.WriteLine($"Height: {height}");
+        float treshold = InputHandler.GetTreshold();
 
-                for (int x = 0; x < width; x++)
-                {
-                    for (int y = 0; y < height; y++)
-                    {
-                        colorMatrix[x, y] = image[x, y]; 
-                    }
-                }
-                QuadtreeTree quadtree = new QuadtreeTree(colorMatrix, width, height);
-                Console.WriteLine("Hello 1");
-                Image<Rgba32> processedImage = quadtree.CreateImageFromDepth(5); // Change depth as needed
-                Console.WriteLine("Hello");
-                // Save the processed image
-                processedImage.Save(outputImagePath);
-                Console.WriteLine($"Processed image saved to: {outputImagePath}");
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error: {ex.Message}");
-        }
+        int minimumBlock = InputHandler.GetMinimumBlock();
+
+        float targetCompression = InputHandler.GetTargetCompression();
+
+        string imageOutputPath = InputHandler.GetOutputPath("Masukkan alamat absolut gambar hasil kompresi (.png): ", ".png");
+
+        string gifOutputPath = InputHandler.GetOutputPath("Masukkan alamat absolut gif hasil (.gif): ", ".gif");
+        #endregion
+
+        #region processing
+        long startTime = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+
+        Rgba32[,] resultImage = image;
+
+        long endTime = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+        #endregion
+
+        #region outputs
+        Console.WriteLine("Waktu eksekusi: " + (endTime - startTime) + " ms");
+
+        OutputHandler.SaveImage(imageOutputPath, resultImage);
+
+        Console.WriteLine("Ukuran file gambar sebelum kompresi: " + oriFileSize + " bytes");
+
+        long compFileSize = new FileInfo(imageOutputPath).Length;
+        Console.WriteLine("Ukuran file gambar setelah kompresi: " + compFileSize + " bytes");
+
+        float compPercentage = (float) compFileSize / (float) oriFileSize * 100f;
+        Console.WriteLine("Persentase kompresi: " + compPercentage + "%");
+
+
+        #endregion
     }
 }
