@@ -32,9 +32,9 @@ class Program
         #endregion
 
         #region outputs
-        OutputHandler.SaveImage(imageOutputPath, resultImage);
-
         Console.WriteLine("Waktu eksekusi: " + (endTime - startTime) + " ms");
+
+        OutputHandler.SaveImage(imageOutputPath, resultImage);
         #endregion
     }
 }
