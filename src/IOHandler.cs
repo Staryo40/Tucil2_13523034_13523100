@@ -5,7 +5,7 @@ namespace IOHandler
 {
     public static class InputHandler
     {
-        public static Rgba32[,] GetImage()
+        public static (Rgba32[,], long) GetImage()
         {
             string? absolutePath;
             while (true)
@@ -40,7 +40,7 @@ namespace IOHandler
                                 pixelMatrix[x, y] = image[x,y];
                             }
                         }
-                        return pixelMatrix;
+                        return (pixelMatrix, new FileInfo(absolutePath).Length);
                     }
                 }
                 catch

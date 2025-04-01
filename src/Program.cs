@@ -8,7 +8,7 @@ class Program
     static void Main()
     {
         #region inputs
-        Rgba32[,] image = InputHandler.GetImage();
+        (Rgba32[,] image, long oriFileSize) = InputHandler.GetImage();
 
         int errorMethod = InputHandler.GetErrorMethod();
 
@@ -35,6 +35,16 @@ class Program
         Console.WriteLine("Waktu eksekusi: " + (endTime - startTime) + " ms");
 
         OutputHandler.SaveImage(imageOutputPath, resultImage);
+
+        Console.WriteLine("Ukuran file gambar sebelum kompresi: " + oriFileSize + " bytes");
+
+        long compFileSize = new FileInfo(imageOutputPath).Length;
+        Console.WriteLine("Ukuran file gambar setelah kompresi: " + compFileSize + " bytes");
+
+        float compPercentage = (float) compFileSize / (float) oriFileSize * 100f;
+        Console.WriteLine("Persentase kompresi: " + compPercentage + "%");
+
+
         #endregion
     }
 }
