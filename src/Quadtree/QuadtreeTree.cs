@@ -11,15 +11,23 @@ namespace Quadtree{
         private QuadtreeNode root;
         public QuadtreeTree(Rgba32[,] i, int width, int height){
             Image = i;
-            Console.WriteLine("ran 0");
-            root = new QuadtreeNode(this, (0, 0, width, height), 0, null);
-            Console.WriteLine("ran 1");
-            buildTree(root, 10, 0.5);
-            Console.WriteLine("ran 2");
+            root = new QuadtreeNode(this, (0, 0), 0, width, height, null);
+            buildTree(root, 6, 0.001);
         }
 
         public Rgba32 GetPixel(int x, int y) => Image[x, y];
-        public Rgba32 GetPixel(int x, int y, (int x, int y) offset) => Image[x + offset.x, y + offset.y];
+        public Rgba32 GetPixel(int x, int y, (int top, int left) offset) 
+        {
+            int newX = x + offset.left;
+            int newY = y + offset.top;
+            
+            if (newX < 0 || newX >= Image.GetLength(0) || newY < 0 || newY >= Image.GetLength(1))
+            {
+                throw new IndexOutOfRangeException($"Attempted to access ({newX}, {newY}), but image is {Image.GetLength(0)}x{Image.GetLength(1)}");
+            }
+
+            return Image[newX, newY];
+        }
 
         public void buildTree(QuadtreeNode r, int maxDepth, double errorThreshold){
             if (r.Depth >= maxDepth || r.errorVariance() <= errorThreshold){
@@ -42,28 +50,38 @@ namespace Quadtree{
 
         public Image<Rgba32> CreateImageFromDepth(int depth)
         {
-            float m = 1; // This constant should be defined (like in Python)
-            int dx = 0, dy = 0;  // Padding for each image section
+            float m = 1;  // scaling
+            int dx = 0, dy = 0; // padding
+
             int imageWidth = (int)(root.Width * m + dx);
             int imageHeight = (int)(root.Height * m + dy);
+            Console.WriteLine($"Image Dimensions: {imageWidth}x{imageHeight}");
 
             var image = new Image<Rgba32>(imageWidth, imageHeight);
-            image.Mutate(ctx => ctx.Fill(Color.Black));  // Background color (black)
+            for (int y = 0; y < imageHeight; y++)
+            {
+                for (int x = 0; x < imageWidth; x++)
+                {
+                    image[x, y] = Color.Black;
+                }
+            }
 
             var leafNodes = GetLeafNodesAtDepth(depth);
 
             foreach (var node in leafNodes)
             {
-                var (l, t, r, b) = node.GetBorders();
+                var (t, l, r, b) = node.GetBorders();
                 var box = new Rectangle(
                     (int)(l * m + dx),
                     (int)(t * m + dy),
                     (int)((r - l) * m - 1),
                     (int)((b - t) * m - 1)
                 );
+                
+                var (meanR, meanG, meanB) = node.colorMean();
 
-                Rgba32 avgColor = ComputeAverageColor(node);
-                image.Mutate(ctx => ctx.Fill(avgColor, box));  // Fill with computed color
+                Rgba32 avgColor = new Rgba32((byte) meanR, (byte) meanG, (byte) meanB, 255);
+                image.Mutate(ctx => ctx.Fill(avgColor, box));  
             }
 
             return image;
@@ -72,7 +90,6 @@ namespace Quadtree{
         private List<QuadtreeNode> GetLeafNodesAtDepth(int depth)
         {
             List<QuadtreeNode> leafNodes = new List<QuadtreeNode>();
-            // Recursively traverse the tree and collect leaf nodes
             CollectLeafNodesAtDepth(root, depth, leafNodes);
             return leafNodes;
         }
@@ -80,14 +97,12 @@ namespace Quadtree{
         // Recursively collect leaf nodes at the specified depth
         private void CollectLeafNodesAtDepth(QuadtreeNode node, int depth, List<QuadtreeNode> leafNodes)
         {
-            // If it's a leaf or has reached the given depth, add it to the list
             if (node.IsLeaf || node.Depth == depth)
             {
                 leafNodes.Add(node);
             }
             else if (node.Children != null)
             {
-                // Recursively process each child
                 (QuadtreeNode topLeft, QuadtreeNode topRight, QuadtreeNode bottomLeft, QuadtreeNode bottomRight) = node.Children.Value;
                 CollectLeafNodesAtDepth(topLeft, depth, leafNodes);
                 CollectLeafNodesAtDepth(topRight, depth, leafNodes);
@@ -95,31 +110,5 @@ namespace Quadtree{
                 CollectLeafNodesAtDepth(bottomRight, depth, leafNodes);
             }
         }
-
-
-        private Rgba32 ComputeAverageColor(QuadtreeNode n)
-        {
-            long sumR = 0, sumG = 0, sumB = 0;
-            int pixelCount = n.Width * n.Height;
-
-            for (int y = 0; y < n.Height; y++)
-            {
-                for (int x = 0; x < n.Width; x++)
-                {
-                    var pixel = GetPixel(x, y, n.TopLeft);
-                    sumR += pixel.R;
-                    sumG += pixel.G;
-                    sumB += pixel.B;
-                }
-            }
-
-            return new Rgba32(
-                (byte)(sumR / pixelCount),
-                (byte)(sumG / pixelCount),
-                (byte)(sumB / pixelCount)
-            );
-        }
-
-
     }
 }
