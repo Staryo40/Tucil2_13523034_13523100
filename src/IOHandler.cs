@@ -5,7 +5,7 @@ namespace IOHandler
 {
     public static class InputHandler
     {
-        public static Color[,] GetImage()
+        public static Rgba32[,] GetImage()
         {
             string? absolutePath;
             while (true)
@@ -30,13 +30,13 @@ namespace IOHandler
                     {
                         int width = image.Width;
                         int height = image.Height;
-                        Color[,] pixelMatrix = new Color[width, height];
+                        Rgba32[,] pixelMatrix = new Rgba32[width, height];
 
                         for (int x = 0; x < width; x++)
                         {
                             for (int y = 0; y < height; y++)
                             {
-                                pixelMatrix[x, y] = new Color(image[x,y]);
+                                pixelMatrix[x, y] = image[x,y];
                             }
                         }
                         return pixelMatrix;
@@ -243,7 +243,7 @@ namespace IOHandler
 
     public static class OutputHandler
     {
-        public static void SaveImage(string outputPath, Color[,] pixelMatrix)
+        public static void SaveImage(string outputPath, Rgba32[,] pixelMatrix)
         {
             using (Image<Rgba32> image = new Image<Rgba32>(pixelMatrix.GetLength(0), pixelMatrix.GetLength(1)))
             {
@@ -251,7 +251,7 @@ namespace IOHandler
                 {
                     for (int y = 0; y < pixelMatrix.GetLength(1); y++)
                     {
-                        image[x, y] = pixelMatrix[x, y].ToPixel<Rgba32>();
+                        image[x, y] = pixelMatrix[x, y];
                     }
                 }
 
