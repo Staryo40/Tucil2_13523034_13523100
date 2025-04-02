@@ -12,7 +12,7 @@ namespace Quadtree{
         public QuadtreeTree(Rgba32[,] i, int width, int height){
             Image = i;
             root = new QuadtreeNode(this, (0, 0), 0, width, height, null);
-            buildTree(root, 6, 0.001);
+            buildTree(root, 8, 5); // Compression parameters
         }
 
         public Rgba32 GetPixel(int x, int y) => Image[x, y];
@@ -48,7 +48,7 @@ namespace Quadtree{
             buildTree(bottomRight, maxDepth, errorThreshold);
         }
 
-        public Image<Rgba32> CreateImageFromDepth(int depth)
+        public Rgba32[,] CreateImageFromDepth(int depth)
         {
             float m = 1;  // scaling
             int dx = 0, dy = 0; // padding
@@ -57,31 +57,33 @@ namespace Quadtree{
             int imageHeight = (int)(root.Height * m + dy);
             Console.WriteLine($"Image Dimensions: {imageWidth}x{imageHeight}");
 
-            var image = new Image<Rgba32>(imageWidth, imageHeight);
-            for (int y = 0; y < imageHeight; y++)
-            {
-                for (int x = 0; x < imageWidth; x++)
-                {
-                    image[x, y] = Color.Black;
-                }
-            }
+            var image = new Rgba32[imageWidth, imageHeight];
+            // for (int y = 0; y < imageHeight; y++)
+            // {
+            //     for (int x = 0; x < imageWidth; x++)
+            //     {
+            //         image[x, y] = new Rgba32(0, 0, 0, 255);
+            //     }
+            // }
 
             var leafNodes = GetLeafNodesAtDepth(depth);
 
             foreach (var node in leafNodes)
             {
                 var (t, l, r, b) = node.GetBorders();
-                var box = new Rectangle(
-                    (int)(l * m + dx),
-                    (int)(t * m + dy),
-                    (int)((r - l) * m - 1),
-                    (int)((b - t) * m - 1)
-                );
-                
                 var (meanR, meanG, meanB) = node.colorMean();
+                Rgba32 avgColor = new Rgba32((byte)meanR, (byte)meanG, (byte)meanB, 255);
 
-                Rgba32 avgColor = new Rgba32((byte) meanR, (byte) meanG, (byte) meanB, 255);
-                image.Mutate(ctx => ctx.Fill(avgColor, box));  
+                for (int y = t; y < b; y++)
+                {
+                    for (int x = l; x < r; x++)
+                    {
+                        if (x >= 0 && x < imageWidth && y >= 0 && y < imageHeight)
+                        {
+                            image[x, y] = avgColor;
+                        }
+                    }
+                }
             }
 
             return image;
@@ -109,6 +111,23 @@ namespace Quadtree{
                 CollectLeafNodesAtDepth(bottomLeft, depth, leafNodes);
                 CollectLeafNodesAtDepth(bottomRight, depth, leafNodes);
             }
+        }
+
+        public Image<Rgba32> ConvertArrayToImage(Rgba32[,] array)
+        {
+            int width = array.GetLength(0);
+            int height = array.GetLength(1);
+            var image = new Image<Rgba32>(width, height);
+
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    image[x, y] = array[x, y];
+                }
+            }
+
+            return image;
         }
     }
 }
