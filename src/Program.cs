@@ -11,6 +11,9 @@ class Program
         // #region inputs
         (Rgba32[,] image, long oriFileSize) = InputHandler.GetImage();
 
+        double minimumBlock = 200;
+        double threshold = 5;
+
         // int errorMethod = InputHandler.GetErrorMethod();
 
         // float treshold = InputHandler.GetTreshold();
@@ -27,7 +30,7 @@ class Program
         #region processing
         long startTime = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
 
-        QuadtreeTree t = new QuadtreeTree(image, image.GetLength(0), image.GetLength(1));
+        QuadtreeTree t = new QuadtreeTree(image, image.GetLength(0), image.GetLength(1), minimumBlock, 1, threshold);
 
         Rgba32[,] outputArray = t.CreateImageFromDepth(10);
         if (outputArray == null)
@@ -40,7 +43,7 @@ class Program
 
         #region outputs
         Console.WriteLine("Waktu eksekusi: " + (endTime - startTime) + " ms");
-        string imageOutputPath = @"C:\Users\Aryo\PersonalMade\ITB Kuliah Semesteran\Semester 4\Strategi Algoritma\Tucil-Tubes 2025\Tucil2_13523034_13523100\src\output.jpg";
+        string imageOutputPath = @"C:\Users\Aryo\PersonalMade\ITB Kuliah Semesteran\Semester 4\Strategi Algoritma\Tucil-Tubes 2025\Tucil2_13523034_13523100\src\output.png";
         
         OutputHandler.SaveImage(imageOutputPath, outputArray);
 
