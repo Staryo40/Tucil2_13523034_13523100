@@ -16,12 +16,16 @@ namespace Quadtree{
                                                             // 4 = Entropy
                                                             // 5 = Structural Similarity Index (SSIM)
         public double errorThreshold { get; private set; }
+        public int nodeCount { get; set; }
+        public int maxDepth { get; set; }
         public QuadtreeTree(Rgba32[,] i, int width, int height, double mb, int tm, double t){
-            Image = i;
-            root = new QuadtreeNode(this, (0, 0), 0, width, height, null);
-            minimumBlock = mb;
-            thresholdMethod = tm;
-            errorThreshold = t;
+            this.Image = i;
+            this.root = new QuadtreeNode(this, (0, 0), 0, width, height, null);
+            this.minimumBlock = mb;
+            this.thresholdMethod = tm;
+            this.errorThreshold = t;
+            this.nodeCount = 1;
+            this.maxDepth = 0;
             buildTree(root); // Compression parameters
         }
 
@@ -53,18 +57,17 @@ namespace Quadtree{
             buildTree(bottomRight);
         }
 
-        public Rgba32[,] CreateImageFromDepth(int depth)
+        public Rgba32[,] CreateImage()
         {
             float m = 1;  // scaling
             int dx = 0, dy = 0; // padding
 
             int imageWidth = (int)(root.Width * m + dx);
             int imageHeight = (int)(root.Height * m + dy);
-            Console.WriteLine($"Image Dimensions: {imageWidth}x{imageHeight}");
 
             var image = new Rgba32[imageWidth, imageHeight];
 
-            var leafNodes = GetLeafNodesAtDepth(depth);
+            var leafNodes = GetLeafNodesAtDepth(this.maxDepth);
 
             foreach (var node in leafNodes)
             {
