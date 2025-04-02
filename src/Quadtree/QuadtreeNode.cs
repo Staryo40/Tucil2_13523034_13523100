@@ -83,6 +83,12 @@ namespace Quadtree{
             QuadtreeNode bottomLeft = new QuadtreeNode(tree, (midHor, left), Depth + 1, widthLeft, heightBottom, null);
             QuadtreeNode bottomRight = new QuadtreeNode(tree, (midHor, midVer), Depth + 1, widthRight, heightBottom, null);
 
+            tree.nodeCount += 4;
+
+            if (Depth + 1 > tree.maxDepth){
+                tree.maxDepth = Depth + 1;
+            }
+
             Children = (topLeft, topRight, bottomLeft, bottomRight);
         }
 
@@ -163,7 +169,45 @@ namespace Quadtree{
             return result; 
         }
         public double errorEntropy(){
-            return 0;
+            double N = Width * Height;
+
+            int[] redCount = new int[256];
+            int[] greenCount = new int[256];
+            int[] blueCount = new int[256];
+
+            for (int i = 0; i < Width; i++){
+                for (int j = 0; j < Height; j++){
+                    redCount[tree.GetPixel(i, j, TopLeft).R] += 1;
+                    greenCount[tree.GetPixel(i, j, TopLeft).G] += 1;
+                    blueCount[tree.GetPixel(i, j, TopLeft).B] += 1;
+                }
+            }
+
+            double redEntropy = 0;
+            double greenEntropy = 0;
+            double blueEntropy = 0;
+
+            for (int i = 0; i < 256; i++){
+                if (redCount[i] != 0){
+                    double probI = redCount[i] / N;
+                    redEntropy += (probI) * (Math.Log(probI) / Math.Log(2));
+                }
+                if (greenCount[i] != 0){
+                    double probI = greenCount[i] / N;
+                    greenEntropy += (probI) * (Math.Log(probI) / Math.Log(2));
+                }
+                if (blueCount[i] != 0){
+                    double probI = blueCount[i] / N;
+                    blueEntropy += (probI) * (Math.Log(probI) / Math.Log(2));
+                }
+            }
+
+            redEntropy = -redEntropy;
+            greenEntropy = -greenEntropy;
+            blueEntropy = -blueEntropy;
+
+            double result = (redEntropy + greenEntropy + blueEntropy) / 3;
+            return result;
         }
         public double errorSSIM(){
             return 0;
@@ -174,7 +218,7 @@ namespace Quadtree{
             double sumG = 0;
             double sumB = 0;
 
-            Console.WriteLine($"Image Dimensions in mean: {Width}x{Height}, TopLeft: {TopLeft.Item2}x{TopLeft.Item1}, Max iteration: {TopLeft.Item2 + Width}x{TopLeft.Item1 + Height}");
+            // Console.WriteLine($"Image Dimensions in mean: {Width}x{Height}, TopLeft: {TopLeft.Item2}x{TopLeft.Item1}, Max iteration: {TopLeft.Item2 + Width}x{TopLeft.Item1 + Height}");
             for (int i = 0; i < Width; i++){
                 for (int j = 0; j < Height; j++){
                     sumR += tree.GetPixel(i, j, TopLeft).R;

@@ -11,8 +11,8 @@ class Program
         // #region inputs
         (Rgba32[,] image, long oriFileSize) = InputHandler.GetImage();
 
-        double minimumBlock = 200;
-        double threshold = 5;
+        double minimumBlock = 1000;
+        double threshold = 20;
 
         // int errorMethod = InputHandler.GetErrorMethod();
 
@@ -32,7 +32,7 @@ class Program
 
         QuadtreeTree t = new QuadtreeTree(image, image.GetLength(0), image.GetLength(1), minimumBlock, 1, threshold);
 
-        Rgba32[,] outputArray = t.CreateImageFromDepth(10);
+        Rgba32[,] outputArray = t.CreateImage();
         if (outputArray == null)
         {
             throw new Exception("Error: Image creation failed, output is null.");
@@ -43,9 +43,12 @@ class Program
 
         #region outputs
         Console.WriteLine("Waktu eksekusi: " + (endTime - startTime) + " ms");
-        string imageOutputPath = @"C:\Users\Aryo\PersonalMade\ITB Kuliah Semesteran\Semester 4\Strategi Algoritma\Tucil-Tubes 2025\Tucil2_13523034_13523100\src\output.png";
+        string imageOutputPath = @"C:\Users\Aryo\PersonalMade\ITB Kuliah Semesteran\Semester 4\Strategi Algoritma\Tucil-Tubes 2025\Tucil2_13523034_13523100\src\output.jpg";
         
         OutputHandler.SaveImage(imageOutputPath, outputArray);
+
+        Console.WriteLine("Kedalaman Pohon: " + t.maxDepth);
+        Console.WriteLine("Jumlah Simpul: " + t.nodeCount);
 
         Console.WriteLine("Ukuran file gambar sebelum kompresi: " + oriFileSize + " bytes");
 
