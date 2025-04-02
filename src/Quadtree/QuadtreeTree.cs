@@ -9,10 +9,20 @@ namespace Quadtree{
     {
         public Rgba32[,] Image { get; private set; }
         private QuadtreeNode root;
-        public QuadtreeTree(Rgba32[,] i, int width, int height){
+        public double minimumBlock { get; private set; }
+        public int thresholdMethod { get; private set; }    // 1 = Variance
+                                                            // 2 = Mean Absolute Deviation (MAD)
+                                                            // 3 = Max Pixel Difference
+                                                            // 4 = Entropy
+                                                            // 5 = Structural Similarity Index (SSIM)
+        public double errorThreshold { get; private set; }
+        public QuadtreeTree(Rgba32[,] i, int width, int height, double mb, int tm, double t){
             Image = i;
             root = new QuadtreeNode(this, (0, 0), 0, width, height, null);
-            buildTree(root, 8, 5); // Compression parameters
+            minimumBlock = mb;
+            thresholdMethod = tm;
+            errorThreshold = t;
+            buildTree(root); // Compression parameters
         }
 
         public Rgba32 GetPixel(int x, int y) => Image[x, y];
@@ -29,23 +39,18 @@ namespace Quadtree{
             return Image[newX, newY];
         }
 
-        public void buildTree(QuadtreeNode r, int maxDepth, double errorThreshold){
-            if (r.Depth >= maxDepth || r.errorVariance() <= errorThreshold){
-                 if (r.Depth > maxDepth){
-                    maxDepth = r.Depth;
-                 }
-                    
-                r.IsLeaf = true;
-                return;
-            }
-            
+        public void buildTree(QuadtreeNode r){
             r.split();
 
+            if (r.IsLeaf || r.Children == null){
+                return;
+            }
+
             (QuadtreeNode topLeft, QuadtreeNode topRight, QuadtreeNode bottomLeft, QuadtreeNode bottomRight) = r.Children.Value;
-            buildTree(topLeft, maxDepth, errorThreshold);
-            buildTree(topRight, maxDepth, errorThreshold);
-            buildTree(bottomLeft, maxDepth, errorThreshold);
-            buildTree(bottomRight, maxDepth, errorThreshold);
+            buildTree(topLeft);
+            buildTree(topRight);
+            buildTree(bottomLeft);
+            buildTree(bottomRight);
         }
 
         public Rgba32[,] CreateImageFromDepth(int depth)
@@ -58,13 +63,6 @@ namespace Quadtree{
             Console.WriteLine($"Image Dimensions: {imageWidth}x{imageHeight}");
 
             var image = new Rgba32[imageWidth, imageHeight];
-            // for (int y = 0; y < imageHeight; y++)
-            // {
-            //     for (int x = 0; x < imageWidth; x++)
-            //     {
-            //         image[x, y] = new Rgba32(0, 0, 0, 255);
-            //     }
-            // }
 
             var leafNodes = GetLeafNodesAtDepth(depth);
 
@@ -111,23 +109,6 @@ namespace Quadtree{
                 CollectLeafNodesAtDepth(bottomLeft, depth, leafNodes);
                 CollectLeafNodesAtDepth(bottomRight, depth, leafNodes);
             }
-        }
-
-        public Image<Rgba32> ConvertArrayToImage(Rgba32[,] array)
-        {
-            int width = array.GetLength(0);
-            int height = array.GetLength(1);
-            var image = new Image<Rgba32>(width, height);
-
-            for (int y = 0; y < height; y++)
-            {
-                for (int x = 0; x < width; x++)
-                {
-                    image[x, y] = array[x, y];
-                }
-            }
-
-            return image;
         }
     }
 }
