@@ -44,6 +44,24 @@ namespace Quadtree{
         }
 
         public void split(){
+            // Check if still above error threshold
+            double errorValue = tree.thresholdMethod switch
+            {
+                1 => this.errorVariance(),
+                2 => this.errorMAD(),
+                3 => this.errorMaxPixDiff(),
+                4 => this.errorEntropy(),
+                5 => this.errorSSIM(),
+                _ => this.errorVariance()
+            };
+
+            if (errorValue <= tree.errorThreshold)
+            {
+                this.IsLeaf = true;
+                return;
+            }
+            
+            // Counting borders, width, and height of new children
             var (top, left, right, bottom) = GetBorders();
             int midHor = top + (bottom - top)/ 2;
             int midVer = left + (right - left) / 2;
@@ -53,6 +71,12 @@ namespace Quadtree{
 
             int heightTop = (bottom - top) / 2;  
             int heightBottom = (bottom - top) - heightTop;  
+
+            // Check if still above minimum block size
+            if (widthLeft * heightTop < tree.minimumBlock || widthLeft == 0 || widthRight == 0 || heightTop == 0 || heightBottom == 0){
+                this.IsLeaf = true;
+                return;
+            }
             
             QuadtreeNode topLeft = new QuadtreeNode(tree, (top, left), Depth + 1, widthLeft, heightTop, null);
             QuadtreeNode topRight = new QuadtreeNode(tree, (top, midVer), Depth + 1, widthRight, heightTop, null);
@@ -78,14 +102,72 @@ namespace Quadtree{
                 }
             }
 
-            varianceR /= N;
-            varianceG /= N;
-            varianceB /= N;
+            varianceR = varianceR / N;
+            varianceG = varianceG / N;
+            varianceB = varianceB / N;
 
             double result = (varianceR + varianceG + varianceB) / 3;
             return result;
         }
+        public double errorMAD(){
+            double N = Width * Height;
+            var (meanR, meanG, meanB) = colorMean();
+            
+            double madR = 0;
+            double madG = 0;
+            double madB = 0;
+            
+            for (int i = 0; i < Width; i++){
+                for (int j = 0; j < Height; j++){
+                    madR += Math.Abs(tree.GetPixel(i, j, TopLeft).R - meanR);
+                    madG += Math.Abs(tree.GetPixel(i, j, TopLeft).G - meanG);
+                    madB += Math.Abs(tree.GetPixel(i, j, TopLeft).B - meanB);
+                }
+            }
 
+            madR = madR / N;
+            madG = madG / N;
+            madB = madB / N;
+
+            double result = (madR + madG + madB) / 3;
+            return result;
+        }
+        public double errorMaxPixDiff(){
+            double maxR = tree.GetPixel(0, 0, TopLeft).R;
+            double maxG = tree.GetPixel(0, 0, TopLeft).G;
+            double maxB = tree.GetPixel(0, 0, TopLeft).B;
+
+            double minR = tree.GetPixel(0, 0, TopLeft).R;
+            double minG = tree.GetPixel(0, 0, TopLeft).G;
+            double minB = tree.GetPixel(0, 0, TopLeft).B;
+            
+            for (int i = 0; i < Width; i++){
+                for (int j = 0; j < Height; j++){
+                    var pixel = tree.GetPixel(i, j, TopLeft);
+
+                    if (maxR < pixel.R) maxR = pixel.R;
+                    if (maxG < pixel.G) maxG = pixel.G;
+                    if (maxB < pixel.B) maxB = pixel.B;
+
+                    if (minR > pixel.R) minR = pixel.R;
+                    if (minG > pixel.G) minG = pixel.G;
+                    if (minB > pixel.B) minB = pixel.B;
+                }
+            }
+
+            double diffR = maxR - minR;
+            double diffG = maxG - minG;
+            double diffB = maxB - minB;
+
+            double result = (diffR + diffG + diffB) / 3;
+            return result; 
+        }
+        public double errorEntropy(){
+            return 0;
+        }
+        public double errorSSIM(){
+            return 0;
+        }
         public (double, double, double) colorMean(){
             double N = Width * Height;
             double sumR = 0;
