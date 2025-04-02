@@ -58,6 +58,7 @@ namespace Quadtree{
             if (errorValue <= tree.errorThreshold)
             {
                 this.IsLeaf = true;
+                tree.leafCount += 1;
                 return;
             }
             
@@ -75,6 +76,7 @@ namespace Quadtree{
             // Check if still above minimum block size
             if (widthLeft * heightTop < tree.minimumBlock || widthLeft == 0 || widthRight == 0 || heightTop == 0 || heightBottom == 0){
                 this.IsLeaf = true;
+                tree.leafCount += 1;
                 return;
             }
             

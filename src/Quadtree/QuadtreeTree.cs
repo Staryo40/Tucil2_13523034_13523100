@@ -17,6 +17,7 @@ namespace Quadtree{
                                                             // 5 = Structural Similarity Index (SSIM)
         public double errorThreshold { get; private set; }
         public int nodeCount { get; set; }
+        public int leafCount { get; set; }
         public int maxDepth { get; set; }
         public QuadtreeTree(Rgba32[,] i, int width, int height, double mb, int tm, double t){
             this.Image = i;
@@ -25,6 +26,7 @@ namespace Quadtree{
             this.thresholdMethod = tm;
             this.errorThreshold = t;
             this.nodeCount = 1;
+            this.leafCount = 0;
             this.maxDepth = 0;
             buildTree(root); // Compression parameters
         }
