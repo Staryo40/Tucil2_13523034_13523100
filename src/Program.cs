@@ -10,21 +10,6 @@ class Program
     {
         // #region inputs
         (Rgba32[,] image, long oriFileSize) = InputHandler.GetImage();
-        Console.WriteLine($"Image Dimensions in main: {image.GetLength(0)}x{image.GetLength(1)}");
-        QuadtreeTree t = new QuadtreeTree(image, image.GetLength(0), image.GetLength(1));
-        Image<Rgba32> output = t.CreateImageFromDepth(10);
-        if (output == null)
-        {
-            throw new Exception("Error: Image creation failed, output is null.");
-        }
-
-        using (var stream = new MemoryStream())
-        {
-            output.SaveAsJpeg(stream);
-            File.WriteAllBytes("output.jpg", stream.ToArray());
-            Console.WriteLine($"MemoryStream Size: {stream.Length} bytes");
-        }
-
 
         // int errorMethod = InputHandler.GetErrorMethod();
 
@@ -39,28 +24,34 @@ class Program
         // string gifOutputPath = InputHandler.GetOutputPath("Masukkan alamat absolut gif hasil (.gif): ", ".gif");
         // #endregion
 
-        // #region processing
-        // long startTime = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+        #region processing
+        long startTime = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
 
-        // Rgba32[,] resultImage = image;
+        QuadtreeTree t = new QuadtreeTree(image, image.GetLength(0), image.GetLength(1));
 
-        // long endTime = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
-        // #endregion
+        Rgba32[,] outputArray = t.CreateImageFromDepth(10);
+        if (outputArray == null)
+        {
+            throw new Exception("Error: Image creation failed, output is null.");
+        }
 
-        // #region outputs
-        // Console.WriteLine("Waktu eksekusi: " + (endTime - startTime) + " ms");
+        long endTime = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+        #endregion
 
-        // OutputHandler.SaveImage(imageOutputPath, resultImage);
+        #region outputs
+        Console.WriteLine("Waktu eksekusi: " + (endTime - startTime) + " ms");
+        string imageOutputPath = @"C:\Users\Aryo\PersonalMade\ITB Kuliah Semesteran\Semester 4\Strategi Algoritma\Tucil-Tubes 2025\Tucil2_13523034_13523100\src\output.jpg";
+        
+        OutputHandler.SaveImage(imageOutputPath, outputArray);
 
-        // Console.WriteLine("Ukuran file gambar sebelum kompresi: " + oriFileSize + " bytes");
+        Console.WriteLine("Ukuran file gambar sebelum kompresi: " + oriFileSize + " bytes");
 
-        // long compFileSize = new FileInfo(imageOutputPath).Length;
-        // Console.WriteLine("Ukuran file gambar setelah kompresi: " + compFileSize + " bytes");
+        long compFileSize = new FileInfo(imageOutputPath).Length;
+        Console.WriteLine("Ukuran file gambar setelah kompresi: " + compFileSize + " bytes");
 
-        // float compPercentage = (float) compFileSize / (float) oriFileSize * 100f;
-        // Console.WriteLine("Persentase kompresi: " + compPercentage + "%");
+        float compPercentage = (float) compFileSize / (float) oriFileSize * 100f;
+        Console.WriteLine("Persentase kompresi: " + compPercentage + "%");
 
-
-        // #endregion
+        #endregion
     }
 }
