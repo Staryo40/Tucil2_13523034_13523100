@@ -11,8 +11,8 @@ class Program
         // #region inputs
         (Rgba32[,] image, long oriFileSize) = InputHandler.GetImage();
 
-        double minimumBlock = 17;
-        double threshold = 0.0001;
+        double minimumBlock = 16;
+        double threshold = 0.00000001;
 
         Console.WriteLine("Image Dimension: " + image.GetLength(0) + "x" + image.GetLength(1));
         Console.WriteLine("Image Area: " + (image.GetLength(0) * image.GetLength(1)));

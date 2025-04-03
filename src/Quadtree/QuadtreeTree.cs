@@ -74,7 +74,7 @@ namespace Quadtree{
             foreach (var node in leafNodes)
             {
                 var (t, l, r, b) = node.GetBorders();
-                var (meanR, meanG, meanB) = node.colorMean();
+                var(meanR, meanG, meanB) = node.colorMean();
                 Rgba32 avgColor = new Rgba32((byte)meanR, (byte)meanG, (byte)meanB, 255);
 
                 for (int y = t; y < b; y++)
