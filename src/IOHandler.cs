@@ -91,9 +91,9 @@ namespace IOHandler
             }
         }
 
-        public static float GetTreshold()
+        public static double GetThreshold()
         {
-            float value;
+            double value;
 
             while (true)
             {
@@ -108,7 +108,7 @@ namespace IOHandler
 
                 try
                 {
-                    value = Convert.ToSingle(input);
+                    value = Convert.ToDouble(input);
 
                     if (value < 0)
                     {
@@ -259,5 +259,46 @@ namespace IOHandler
                 image.Save(outputPath);
             }
         }
+
+        public static void SaveGIF(string outputPath, List<Rgba32[,]> frameMatrices, int frameDelay = 10, int repeatCount = 0)
+        {
+            if (frameMatrices == null || frameMatrices.Count == 0)
+                throw new ArgumentException("Frame list is empty.");
+
+            using var gif = MatrixToImage(frameMatrices[0]);
+
+            for (int i = 1; i < frameMatrices.Count; i++)
+            {
+                using var frameImage = MatrixToImage(frameMatrices[i]);
+                gif.Frames.AddFrame(frameImage.Frames.RootFrame);
+            }
+
+            foreach (var frame in gif.Frames)
+            {
+                frame.Metadata.GetGifMetadata().FrameDelay = frameDelay; 
+            }
+
+            gif.Metadata.GetGifMetadata().RepeatCount = (ushort)repeatCount; 
+            gif.Save(outputPath);
+        }
+
+        private static Image<Rgba32> MatrixToImage(Rgba32[,] matrix)
+        {
+            int width = matrix.GetLength(0);
+            int height = matrix.GetLength(1);
+            var image = new Image<Rgba32>(width, height);
+
+            for (int x = 0; x < width; x++)
+            {
+                for (int y = 0; y < height; y++)
+                {
+                    image[x, y] = matrix[x, y];
+                }
+            }
+
+            return image;
+        }
+
+
     }
 }
