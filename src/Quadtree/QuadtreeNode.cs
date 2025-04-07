@@ -6,128 +6,226 @@ using SixLabors.ImageSharp.Processing;
 namespace Quadtree{
     class QuadtreeNode
     {
-        public Rgba32[,]? nodeImage;
-        public (int, int, int, int) boxBorder; // top, left, right, bottom
-        private int depth;
-        private int width;
-        private int height;
-        private bool leaf;
-        public (QuadtreeNode, QuadtreeNode, QuadtreeNode, QuadtreeNode)? children; // topleft, topright, bottomleft, bottomright
+        private QuadtreeTree tree;
+        public (int, int) TopLeft { get; private set; } // top, left
+        public int Depth { get; private set; }
+        public int Width { get; private set; }
+        public int Height { get; private set; }
+        public bool IsLeaf;
+        public (QuadtreeNode, QuadtreeNode, QuadtreeNode, QuadtreeNode)? Children; // topleft, topright, bottomleft, bottomright
 
-        public QuadtreeNode(){
-            nodeImage = null;
-            boxBorder = (0, 0, 0, 0);
-            depth = 0;
-            children = null;
-            width = 0;
-            height = 0;  
-            leaf = false;
+        public QuadtreeNode(QuadtreeTree t){
+            tree = t;
+            Depth = 0;
+            Children = null;
+            Width = 0;
+            Height = 0;  
+            IsLeaf = false;
         }
 
-        public QuadtreeNode(Rgba32[,] image, (int, int, int, int) bor, int d, (QuadtreeNode, QuadtreeNode, QuadtreeNode, QuadtreeNode)? c = null)
+        public QuadtreeNode(QuadtreeTree t, (int, int) tl, int d, int w, int h, (QuadtreeNode, QuadtreeNode, QuadtreeNode, QuadtreeNode)? c = null)
         {
-            boxBorder = bor;
-            depth = d;
-            children = c;
+            tree = t;
+            Depth = d;
+            Children = c;
 
-            var (top, left, right, bottom) = boxBorder;
-            width = right - left;
-            height = bottom - top;  
-            leaf = false;
+            var (top, left) = tl;
+            TopLeft = (top, left);
+            Width = w;
+            Height = h;  
+            IsLeaf = false;
+        }
 
-            nodeImage = CropImage(image, top, left, right, bottom);
-        }
-        public int getDepth(){
-            return depth;
-        }
-        public int getWidth(){
-            return width;
-        }
-        public int getHeight(){
-            return height;
-        }
-        public bool isLeaf(){
-            return leaf;
-        }
-        public void setLeaf(bool l){
-            leaf = l;
-        }
-        public Rgba32[,] CropImage(Rgba32[,] image, int top, int left, int right, int bottom)
+        public (int, int, int, int) GetBorders()
         {
-            var result = new Rgba32[bottom - top, right - left];
-
-            for (int y = top; y < bottom; y++)
-            {
-                for (int x = left; x < right; x++)
-                {
-                    result[y - top, x - left] = image[y, x]; 
-                }
-            }
-
-            return result;
+            var (top, left) = TopLeft;
+            var (right, bottom) = (left + Width, top + Height);
+            return (top, left, right, bottom);
         }
 
         public void split(){
-            if (nodeImage == null) 
+            // Check if still above error threshold
+            double errorValue = tree.thresholdMethod switch
             {
-                throw new InvalidOperationException("Node image cannot be null during split.");
+                1 => this.errorVariance(),
+                2 => this.errorMAD(),
+                3 => this.errorMaxPixDiff(),
+                4 => this.errorEntropy(),
+                5 => this.errorSSIM(),
+                _ => this.errorVariance()
+            };
+
+            if (errorValue <= tree.errorThreshold)
+            {
+                this.IsLeaf = true;
+                tree.leafCount += 1;
+                return;
+            }
+            
+            // Counting borders, width, and height of new children
+            var (top, left, right, bottom) = GetBorders();
+            int midHor = top + (bottom - top)/ 2;
+            int midVer = left + (right - left) / 2;
+
+            int widthLeft = (right - left) / 2;  
+            int widthRight = (right - left) - widthLeft;  
+
+            int heightTop = (bottom - top) / 2;  
+            int heightBottom = (bottom - top) - heightTop;  
+
+            // Check if still above minimum block size
+            if (widthLeft * heightTop < tree.minimumBlock || widthLeft == 0 || widthRight == 0 || heightTop == 0 || heightBottom == 0){
+                this.IsLeaf = true;
+                tree.leafCount += 1;
+                return;
+            }
+            
+            QuadtreeNode topLeft = new QuadtreeNode(tree, (top, left), Depth + 1, widthLeft, heightTop, null);
+            QuadtreeNode topRight = new QuadtreeNode(tree, (top, midVer), Depth + 1, widthRight, heightTop, null);
+            QuadtreeNode bottomLeft = new QuadtreeNode(tree, (midHor, left), Depth + 1, widthLeft, heightBottom, null);
+            QuadtreeNode bottomRight = new QuadtreeNode(tree, (midHor, midVer), Depth + 1, widthRight, heightBottom, null);
+
+            tree.nodeCount += 4;
+
+            if (Depth + 1 > tree.maxDepth){
+                tree.maxDepth = Depth + 1;
             }
 
-            var (top, left, right, bottom) = boxBorder;
-            int midHor = left + (right - left) / 2;
-            int midVer = top + (bottom - top) / 2;
-            
-            QuadtreeNode topLeft = new QuadtreeNode(nodeImage, (top, left, midVer, midHor), depth + 1, null);
-            QuadtreeNode topRight = new QuadtreeNode(nodeImage, (top, midVer, right, midHor), depth + 1, null);
-            QuadtreeNode bottomLeft = new QuadtreeNode(nodeImage, (midHor, left, midVer, bottom), depth + 1, null);
-            QuadtreeNode bottomRight = new QuadtreeNode(nodeImage, (midHor, midVer, right, bottom), depth + 1, null);
-            children = (topLeft, topRight, bottomLeft, bottomRight);
+            Children = (topLeft, topRight, bottomLeft, bottomRight);
         }
 
         public double errorVariance(){
-            if (nodeImage == null) 
-            {
-                throw new InvalidOperationException("Node image cannot be null to count error.");
-            }
-
-            double N = width * height;
+            double N = Width * Height;
             var (meanR, meanG, meanB) = colorMean();
             
             double varianceR = 0;
             double varianceG = 0;
             double varianceB = 0;
             
-            for (int i = 0; i < height; i++){
-                for (int j = 0; j < width; j++){
-                    varianceR += (nodeImage[i, j].R - meanR) * (nodeImage[i, j].R - meanR);
-                    varianceG += (nodeImage[i, j].G - meanG) * (nodeImage[i, j].G - meanG);
-                    varianceB += (nodeImage[i, j].B - meanB) * (nodeImage[i, j].B - meanB);
+            for (int i = 0; i < Width; i++){
+                for (int j = 0; j < Height; j++){
+                    varianceR += (tree.GetPixel(i, j, TopLeft).R - meanR) * (tree.GetPixel(i, j, TopLeft).R - meanR);
+                    varianceG += (tree.GetPixel(i, j, TopLeft).G - meanG) * (tree.GetPixel(i, j, TopLeft).G - meanG);
+                    varianceB += (tree.GetPixel(i, j, TopLeft).B - meanB) * (tree.GetPixel(i, j, TopLeft).B - meanB);
                 }
             }
 
-            varianceR /= N;
-            varianceG /= N;
-            varianceB /= N;
+            varianceR = varianceR / N;
+            varianceG = varianceG / N;
+            varianceB = varianceB / N;
 
             double result = (varianceR + varianceG + varianceB) / 3;
             return result;
         }
-
-        public (double, double, double) colorMean(){
-            if (nodeImage == null) 
-            {
-                throw new InvalidOperationException("Node image cannot be null to count mean.");
+        public double errorMAD(){
+            double N = Width * Height;
+            var (meanR, meanG, meanB) = colorMean();
+            
+            double madR = 0;
+            double madG = 0;
+            double madB = 0;
+            
+            for (int i = 0; i < Width; i++){
+                for (int j = 0; j < Height; j++){
+                    madR += Math.Abs(tree.GetPixel(i, j, TopLeft).R - meanR);
+                    madG += Math.Abs(tree.GetPixel(i, j, TopLeft).G - meanG);
+                    madB += Math.Abs(tree.GetPixel(i, j, TopLeft).B - meanB);
+                }
             }
 
-            double N = width * height;
+            madR = madR / N;
+            madG = madG / N;
+            madB = madB / N;
+
+            double result = (madR + madG + madB) / 3;
+            return result;
+        }
+        public double errorMaxPixDiff(){
+            double maxR = tree.GetPixel(0, 0, TopLeft).R;
+            double maxG = tree.GetPixel(0, 0, TopLeft).G;
+            double maxB = tree.GetPixel(0, 0, TopLeft).B;
+
+            double minR = tree.GetPixel(0, 0, TopLeft).R;
+            double minG = tree.GetPixel(0, 0, TopLeft).G;
+            double minB = tree.GetPixel(0, 0, TopLeft).B;
+            
+            for (int i = 0; i < Width; i++){
+                for (int j = 0; j < Height; j++){
+                    var pixel = tree.GetPixel(i, j, TopLeft);
+
+                    if (maxR < pixel.R) maxR = pixel.R;
+                    if (maxG < pixel.G) maxG = pixel.G;
+                    if (maxB < pixel.B) maxB = pixel.B;
+
+                    if (minR > pixel.R) minR = pixel.R;
+                    if (minG > pixel.G) minG = pixel.G;
+                    if (minB > pixel.B) minB = pixel.B;
+                }
+            }
+
+            double diffR = maxR - minR;
+            double diffG = maxG - minG;
+            double diffB = maxB - minB;
+
+            double result = (diffR + diffG + diffB) / 3;
+            return result; 
+        }
+        public double errorEntropy(){
+            double N = Width * Height;
+
+            int[] redCount = new int[256];
+            int[] greenCount = new int[256];
+            int[] blueCount = new int[256];
+
+            for (int i = 0; i < Width; i++){
+                for (int j = 0; j < Height; j++){
+                    redCount[tree.GetPixel(i, j, TopLeft).R] += 1;
+                    greenCount[tree.GetPixel(i, j, TopLeft).G] += 1;
+                    blueCount[tree.GetPixel(i, j, TopLeft).B] += 1;
+                }
+            }
+
+            double redEntropy = 0;
+            double greenEntropy = 0;
+            double blueEntropy = 0;
+
+            for (int i = 0; i < 256; i++){
+                if (redCount[i] != 0){
+                    double probI = redCount[i] / N;
+                    redEntropy += (probI) * (Math.Log(probI) / Math.Log(2));
+                }
+                if (greenCount[i] != 0){
+                    double probI = greenCount[i] / N;
+                    greenEntropy += (probI) * (Math.Log(probI) / Math.Log(2));
+                }
+                if (blueCount[i] != 0){
+                    double probI = blueCount[i] / N;
+                    blueEntropy += (probI) * (Math.Log(probI) / Math.Log(2));
+                }
+            }
+
+            redEntropy = -redEntropy;
+            greenEntropy = -greenEntropy;
+            blueEntropy = -blueEntropy;
+
+            double result = (redEntropy + greenEntropy + blueEntropy) / 3;
+            return result;
+        }
+        public double errorSSIM(){
+            return 0;
+        }
+        public (double, double, double) colorMean(){
+            double N = Width * Height;
             double sumR = 0;
             double sumG = 0;
             double sumB = 0;
-            for (int i = 0; i < height; i++){
-                for (int j = 0; j < width; j++){
-                    sumR += nodeImage[i, j].R;
-                    sumG += nodeImage[i, j].G;
-                    sumB += nodeImage[i, j].B;
+
+            // Console.WriteLine($"Image Dimensions in mean: {Width}x{Height}, TopLeft: {TopLeft.Item2}x{TopLeft.Item1}, Max iteration: {TopLeft.Item2 + Width}x{TopLeft.Item1 + Height}");
+            for (int i = 0; i < Width; i++){
+                for (int j = 0; j < Height; j++){
+                    sumR += tree.GetPixel(i, j, TopLeft).R;
+                    sumG += tree.GetPixel(i, j, TopLeft).G;
+                    sumB += tree.GetPixel(i, j, TopLeft).B;
                 }
             }
 

@@ -1,4 +1,5 @@
 using IOHandler;
+using Quadtree;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 
@@ -7,34 +8,52 @@ class Program
 {
     static void Main()
     {
-        #region inputs
+        // #region inputs
         (Rgba32[,] image, long oriFileSize) = InputHandler.GetImage();
 
-        int errorMethod = InputHandler.GetErrorMethod();
+        double minimumBlock = 16;
+        double threshold = 0.00000001;
 
-        float treshold = InputHandler.GetTreshold();
+        Console.WriteLine("Image Dimension: " + image.GetLength(0) + "x" + image.GetLength(1));
+        Console.WriteLine("Image Area: " + (image.GetLength(0) * image.GetLength(1)));
 
-        int minimumBlock = InputHandler.GetMinimumBlock();
+        // int errorMethod = InputHandler.GetErrorMethod();
 
-        float targetCompression = InputHandler.GetTargetCompression();
+        // float treshold = InputHandler.GetTreshold();
 
-        string imageOutputPath = InputHandler.GetOutputPath("Masukkan alamat absolut gambar hasil kompresi (.png): ", ".png");
+        // int minimumBlock = InputHandler.GetMinimumBlock();
 
-        string gifOutputPath = InputHandler.GetOutputPath("Masukkan alamat absolut gif hasil (.gif): ", ".gif");
-        #endregion
+        // float targetCompression = InputHandler.GetTargetCompression();
+
+        // string imageOutputPath = InputHandler.GetOutputPath("Masukkan alamat absolut gambar hasil kompresi (.png): ", ".png");
+
+        // string gifOutputPath = InputHandler.GetOutputPath("Masukkan alamat absolut gif hasil (.gif): ", ".gif");
+        // #endregion
 
         #region processing
         long startTime = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
 
-        Rgba32[,] resultImage = image;
+        QuadtreeTree t = new QuadtreeTree(image, image.GetLength(0), image.GetLength(1), minimumBlock, 1, threshold);
+
+        Rgba32[,] outputArray = t.CreateImage();
+        if (outputArray == null)
+        {
+            throw new Exception("Error: Image creation failed, output is null.");
+        }
 
         long endTime = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
         #endregion
 
         #region outputs
-        Console.WriteLine("Waktu eksekusi: " + (endTime - startTime) + " ms");
 
-        OutputHandler.SaveImage(imageOutputPath, resultImage);
+        Console.WriteLine("Waktu eksekusi: " + (endTime - startTime) + " ms");
+        string imageOutputPath = @"C:\Users\Aryo\PersonalMade\ITB Kuliah Semesteran\Semester 4\Strategi Algoritma\Tucil-Tubes 2025\Tucil2_13523034_13523100\src\output.jpg";
+        
+        OutputHandler.SaveImage(imageOutputPath, outputArray);
+
+        Console.WriteLine("Kedalaman Pohon: " + t.maxDepth);
+        Console.WriteLine("Jumlah Simpul: " + t.nodeCount);
+        Console.WriteLine("Jumlah Daun: " + t.leafCount);
 
         Console.WriteLine("Ukuran file gambar sebelum kompresi: " + oriFileSize + " bytes");
 
@@ -43,7 +62,6 @@ class Program
 
         float compPercentage = (float) compFileSize / (float) oriFileSize * 100f;
         Console.WriteLine("Persentase kompresi: " + compPercentage + "%");
-
 
         #endregion
     }
