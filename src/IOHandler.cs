@@ -260,7 +260,7 @@ namespace IOHandler
             }
         }
 
-        public static void SaveGIF(string outputPath, List<Rgba32[,]> frameMatrices, int frameDelay = 10, int repeatCount = 0)
+        public static void SaveGIF(string outputPath, List<Rgba32[,]> frameMatrices, int frameDelay = 50, int repeatCount = 0)
         {
             if (frameMatrices == null || frameMatrices.Count == 0)
                 throw new ArgumentException("Frame list is empty.");
