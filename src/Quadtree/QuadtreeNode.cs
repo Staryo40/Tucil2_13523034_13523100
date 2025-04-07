@@ -1,7 +1,6 @@
 using System;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Processing;
 
 namespace Quadtree{
     class QuadtreeNode
@@ -15,6 +14,7 @@ namespace Quadtree{
         public (QuadtreeNode, QuadtreeNode, QuadtreeNode, QuadtreeNode)? Children; // topleft, topright, bottomleft, bottomright
 
         public QuadtreeNode(QuadtreeTree t){
+            // Default constructor
             tree = t;
             Depth = 0;
             Children = null;
@@ -25,6 +25,7 @@ namespace Quadtree{
 
         public QuadtreeNode(QuadtreeTree t, (int, int) tl, int d, int w, int h, (QuadtreeNode, QuadtreeNode, QuadtreeNode, QuadtreeNode)? c = null)
         {
+            // User defined constructor
             tree = t;
             Depth = d;
             Children = c;
@@ -44,6 +45,8 @@ namespace Quadtree{
         }
 
         public void split(){
+            // Procedure to split the node, giving four children to the node if conditions are met
+
             // Check if still above error threshold
             double errorValue = tree.thresholdMethod switch
             {
@@ -58,6 +61,7 @@ namespace Quadtree{
             if (errorValue <= tree.errorThreshold)
             {
                 this.IsLeaf = true;
+                tree.leafNodes.Add(this);
                 tree.leafCount += 1;
                 return;
             }
@@ -76,6 +80,7 @@ namespace Quadtree{
             // Check if still above minimum block size
             if (widthLeft * heightTop < tree.minimumBlock || widthLeft == 0 || widthRight == 0 || heightTop == 0 || heightBottom == 0){
                 this.IsLeaf = true;
+                tree.leafNodes.Add(this);
                 tree.leafCount += 1;
                 return;
             }
@@ -95,6 +100,7 @@ namespace Quadtree{
         }
 
         public double errorVariance(){
+            // Error measurement using Variance of the three color channels
             double N = Width * Height;
             var (meanR, meanG, meanB) = colorMean();
             
@@ -118,6 +124,7 @@ namespace Quadtree{
             return result;
         }
         public double errorMAD(){
+            // Error measurement using Mean Absolute Deviation of the three color channels
             double N = Width * Height;
             var (meanR, meanG, meanB) = colorMean();
             
@@ -141,6 +148,7 @@ namespace Quadtree{
             return result;
         }
         public double errorMaxPixDiff(){
+            // Error measurement using Max Pixel Difference of the three color channels
             double maxR = tree.GetPixel(0, 0, TopLeft).R;
             double maxG = tree.GetPixel(0, 0, TopLeft).G;
             double maxB = tree.GetPixel(0, 0, TopLeft).B;
@@ -171,6 +179,7 @@ namespace Quadtree{
             return result; 
         }
         public double errorEntropy(){
+            // Error measurement using entropy of the three color channels
             double N = Width * Height;
 
             int[] redCount = new int[256];
@@ -212,9 +221,11 @@ namespace Quadtree{
             return result;
         }
         public double errorSSIM(){
+            // Error measurement using ...
             return 0;
         }
         public (double, double, double) colorMean(){
+            // Function to return the mean of each color channel in a node
             double N = Width * Height;
             double sumR = 0;
             double sumG = 0;

@@ -1,15 +1,13 @@
 using System;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Processing;
-using SixLabors.ImageSharp.Drawing.Processing;
 
 namespace Quadtree{
     class QuadtreeTree
     {
         public Rgba32[,] Image { get; private set; }
         private QuadtreeNode root;
-        public double minimumBlock { get; private set; }
+        public int minimumBlock { get; private set; }
         public int thresholdMethod { get; private set; }    // 1 = Variance
                                                             // 2 = Mean Absolute Deviation (MAD)
                                                             // 3 = Max Pixel Difference
@@ -19,7 +17,9 @@ namespace Quadtree{
         public int nodeCount { get; set; }
         public int leafCount { get; set; }
         public int maxDepth { get; set; }
-        public QuadtreeTree(Rgba32[,] i, int width, int height, double mb, int tm, double t){
+        public List<QuadtreeNode> leafNodes { get; set; }
+        public QuadtreeTree(Rgba32[,] i, int width, int height, int mb, int tm, double t){
+            // User-defined Constructor
             this.Image = i;
             this.root = new QuadtreeNode(this, (0, 0), 0, width, height, null);
             this.minimumBlock = mb;
@@ -28,9 +28,12 @@ namespace Quadtree{
             this.nodeCount = 1;
             this.leafCount = 0;
             this.maxDepth = 0;
-            buildTree(root); // Compression parameters
+            this.leafNodes = new List<QuadtreeNode>();
+
+            buildTree(root);
         }
 
+        // Helper functions to get certain pixels from the original image
         public Rgba32 GetPixel(int x, int y) => Image[x, y];
         public Rgba32 GetPixel(int x, int y, (int top, int left) offset) 
         {
@@ -46,6 +49,7 @@ namespace Quadtree{
         }
 
         public void buildTree(QuadtreeNode r){
+            // Procedure to build Quadtree with the parameters given for image compression
             r.split();
 
             if (r.IsLeaf || r.Children == null){
@@ -61,6 +65,7 @@ namespace Quadtree{
 
         public Rgba32[,] CreateImage()
         {
+            // Function that creates the compressed image based on the Quadtree that is built
             float m = 1;  // scaling
             int dx = 0, dy = 0; // padding
 
@@ -69,7 +74,7 @@ namespace Quadtree{
 
             var image = new Rgba32[imageWidth, imageHeight];
 
-            var leafNodes = GetLeafNodesAtDepth(this.maxDepth);
+            // var leafNodes2 = GetLeafNodesAtDepth(this.maxDepth);
 
             foreach (var node in leafNodes)
             {
@@ -94,14 +99,16 @@ namespace Quadtree{
 
         private List<QuadtreeNode> GetLeafNodesAtDepth(int depth)
         {
+            // MIGHT BECOME LEGACY
+            // Function that returns the leaves of the tree up to a certain depth 
             List<QuadtreeNode> leafNodes = new List<QuadtreeNode>();
             CollectLeafNodesAtDepth(root, depth, leafNodes);
             return leafNodes;
         }
 
-        // Recursively collect leaf nodes at the specified depth
         private void CollectLeafNodesAtDepth(QuadtreeNode node, int depth, List<QuadtreeNode> leafNodes)
         {
+            // Procedure to collect leaf nodes up to the specified depth
             if (node.IsLeaf || node.Depth == depth)
             {
                 leafNodes.Add(node);
