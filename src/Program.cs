@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using IOHandler;
 using Quadtree;
 using SixLabors.ImageSharp;
@@ -11,7 +12,7 @@ class Program
         // #region inputs
         (Rgba32[,] image, long oriFileSize) = InputHandler.GetImage();
 
-        double minimumBlock = 16;
+        int minimumBlock = 1000;
         double threshold = 0.00000001;
 
         Console.WriteLine("Image Dimension: " + image.GetLength(0) + "x" + image.GetLength(1));
@@ -19,7 +20,7 @@ class Program
 
         // int errorMethod = InputHandler.GetErrorMethod();
 
-        // float treshold = InputHandler.GetTreshold();
+        // double treshold = InputHandler.GetThreshold();
 
         // int minimumBlock = InputHandler.GetMinimumBlock();
 
@@ -31,25 +32,32 @@ class Program
         // #endregion
 
         #region processing
-        long startTime = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+        // Image Processing
+        long startTimeImage = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
 
         QuadtreeTree t = new QuadtreeTree(image, image.GetLength(0), image.GetLength(1), minimumBlock, 1, threshold);
-
         Rgba32[,] outputArray = t.CreateImage();
-        if (outputArray == null)
-        {
-            throw new Exception("Error: Image creation failed, output is null.");
-        }
 
-        long endTime = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+        long endTimeImage = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+
+        // GIF Processing
+        QuadtreeArray ta = new QuadtreeArray(image, oriFileSize, 2);
+        ta.CreateGIFImages();
+        
+        long gifExecutionTime = 0;
+        for (int i = 0; i < ta.ExecutionTimes.Count; i++){
+            gifExecutionTime += ta.ExecutionTimes[i];
+        }
         #endregion
 
         #region outputs
 
-        Console.WriteLine("Waktu eksekusi: " + (endTime - startTime) + " ms");
+        Console.WriteLine("Waktu eksekusi: " + (endTimeImage - startTimeImage) + " ms");
         string imageOutputPath = @"C:\Users\Aryo\PersonalMade\ITB Kuliah Semesteran\Semester 4\Strategi Algoritma\Tucil-Tubes 2025\Tucil2_13523034_13523100\src\output.jpg";
-        
+        string gifOutputPath = @"C:\Users\Aryo\PersonalMade\ITB Kuliah Semesteran\Semester 4\Strategi Algoritma\Tucil-Tubes 2025\Tucil2_13523034_13523100\src\output.gif";
+
         OutputHandler.SaveImage(imageOutputPath, outputArray);
+        OutputHandler.SaveGIF(gifOutputPath, ta.Buffer);
 
         Console.WriteLine("Kedalaman Pohon: " + t.maxDepth);
         Console.WriteLine("Jumlah Simpul: " + t.nodeCount);
@@ -60,8 +68,10 @@ class Program
         long compFileSize = new FileInfo(imageOutputPath).Length;
         Console.WriteLine("Ukuran file gambar setelah kompresi: " + compFileSize + " bytes");
 
-        float compPercentage = (float) compFileSize / (float) oriFileSize * 100f;
+        float compPercentage = (1 - (float) compFileSize / (float) oriFileSize) * 100f;
         Console.WriteLine("Persentase kompresi: " + compPercentage + "%");
+
+        Console.WriteLine("Waktu eksekusi buat GIF: " + gifExecutionTime + " ms");
 
         #endregion
     }
