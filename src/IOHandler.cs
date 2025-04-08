@@ -92,6 +92,9 @@ namespace IOHandler
                 Console.Clear();
                 ShowInputStatus();
 
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                Console.WriteLine("   ERROR METHODS");
+                Console.ResetColor();
                 Console.WriteLine("1. Variance");
                 Console.WriteLine("2. Mean Absolute Deviation (MAD)");
                 Console.WriteLine("3. Max Pixel Difference");
