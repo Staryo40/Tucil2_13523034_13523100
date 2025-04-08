@@ -28,10 +28,13 @@ namespace Quadtree{
                 int minimalBlock = (int)((imageWidth / Math.Pow(2, i)) * (imageHeight / Math.Pow(2, i)));
 
                 long startTime = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+
                 QuadtreeTree t = new QuadtreeTree(OriginalImage, imageWidth, imageHeight, minimalBlock, 1, 0);
+                Rgba32[,] outputArray = t.CreateImage();
+                
                 long endTime = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
 
-                Rgba32[,] outputArray = t.CreateImage();
+                
                 float compression = 1 - ((float) GetExpectedFileSize(outputArray, Extension) / (float) OriginalSize);
                 ExecutionTimes.Add(endTime-startTime);
                 Buffer.Add(outputArray);

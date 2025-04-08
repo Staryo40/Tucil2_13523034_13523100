@@ -9,36 +9,28 @@ class Program
 {
     static void Main()
     {
-        // #region inputs
+        #region inputs
+        // Console.WriteLine("Image Dimension: " + image.GetLength(0) + "x" + image.GetLength(1));
+        // Console.WriteLine("Image Area: " + (image.GetLength(0) * image.GetLength(1)));
+
         (Rgba32[,] image, long oriFileSize) = InputHandler.GetImage();
 
-        int minimumBlock = 1000;
-        double threshold = 0.00000001;
+        int errorMethod = InputHandler.GetErrorMethod();
+        double threshold = InputHandler.GetThreshold();
+        int minimumBlock = InputHandler.GetMinimumBlock();
+        float targetCompression = InputHandler.GetTargetCompression();
+        string imageOutputPath = InputHandler.GetOutputPath("Masukkan alamat absolut gambar hasil kompresi: ", InputHandler.ImageExtensionType);
+        string gifOutputPath = InputHandler.GetOutputPath("Masukkan alamat absolut gif hasil (.gif): ", ".gif");
+        
+        Console.Clear();
+        InputHandler.ShowInputStatus();
 
-        Console.WriteLine("Image Dimension: " + image.GetLength(0) + "x" + image.GetLength(1));
-        Console.WriteLine("Image Area: " + (image.GetLength(0) * image.GetLength(1)));
-
-        // int errorMethod = InputHandler.GetErrorMethod();
-
-        // double treshold = InputHandler.GetThreshold();
-
-        // int minimumBlock = InputHandler.GetMinimumBlock();
-
-        // float targetCompression = InputHandler.GetTargetCompression();
-
-        // string imageOutputPath = InputHandler.GetOutputPath("Masukkan alamat absolut gambar hasil kompresi (.png): ", ".png");
-
-        // string gifOutputPath = InputHandler.GetOutputPath("Masukkan alamat absolut gif hasil (.gif): ", ".gif");
-        // #endregion
+        #endregion
 
         #region processing
-        // Image Processing
-        long startTimeImage = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
-
-        QuadtreeTree t = new QuadtreeTree(image, image.GetLength(0), image.GetLength(1), minimumBlock, 1, threshold);
-        Rgba32[,] outputArray = t.CreateImage();
-
-        long endTimeImage = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.WriteLine("   PROCESSING");
+        Console.ResetColor();
 
         // GIF Processing
         QuadtreeArray ta = new QuadtreeArray(image, oriFileSize, 2);
@@ -48,13 +40,24 @@ class Program
         for (int i = 0; i < ta.ExecutionTimes.Count; i++){
             gifExecutionTime += ta.ExecutionTimes[i];
         }
+
+        // Image Processing
+        long startTimeImage = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+
+        QuadtreeTree t = new QuadtreeTree(image, image.GetLength(0), image.GetLength(1), minimumBlock, errorMethod, threshold);
+        Rgba32[,] outputArray = t.CreateImage();
+
+        long endTimeImage = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
         #endregion
 
         #region outputs
+        Console.ForegroundColor = ConsoleColor.Cyan;
+        Console.WriteLine("   OUTPUT");
+        Console.ResetColor();
 
         Console.WriteLine("Waktu eksekusi: " + (endTimeImage - startTimeImage) + " ms");
-        string imageOutputPath = @"C:\Users\Aryo\PersonalMade\ITB Kuliah Semesteran\Semester 4\Strategi Algoritma\Tucil-Tubes 2025\Tucil2_13523034_13523100\src\output.jpg";
-        string gifOutputPath = @"C:\Users\Aryo\PersonalMade\ITB Kuliah Semesteran\Semester 4\Strategi Algoritma\Tucil-Tubes 2025\Tucil2_13523034_13523100\src\output.gif";
+        // string imageOutputPath = @"C:\Users\Aryo\PersonalMade\ITB Kuliah Semesteran\Semester 4\Strategi Algoritma\Tucil-Tubes 2025\Tucil2_13523034_13523100\src\output.jpg";
+        // string gifOutputPath = @"C:\Users\Aryo\PersonalMade\ITB Kuliah Semesteran\Semester 4\Strategi Algoritma\Tucil-Tubes 2025\Tucil2_13523034_13523100\src\output.gif";
 
         OutputHandler.SaveImage(imageOutputPath, outputArray);
         OutputHandler.SaveGIF(gifOutputPath, ta.Buffer);
@@ -72,6 +75,10 @@ class Program
         Console.WriteLine("Persentase kompresi: " + compPercentage + "%");
 
         Console.WriteLine("Waktu eksekusi buat GIF: " + gifExecutionTime + " ms");
+        // for (int i = 0; i < ta.CompressionRates.Count; i++)
+        // {
+        //     Console.WriteLine($"compression {i} = {ta.CompressionRates[i]}");
+        // }
 
         #endregion
     }
