@@ -11,6 +11,7 @@ namespace Quadtree{
         public int Width { get; private set; }
         public int Height { get; private set; }
         public bool IsLeaf;
+
         public (QuadtreeNode, QuadtreeNode, QuadtreeNode, QuadtreeNode)? Children; // topleft, topright, bottomleft, bottomright
 
         public QuadtreeNode(QuadtreeTree t){
@@ -225,7 +226,36 @@ namespace Quadtree{
 
         public double errorSSIM(){
             // Error measurement using ...
-            return 0;
+            const double C2 = 58.5225;
+            const double WR = 0.2989;
+            const double WG = 0.5870;
+            const double WB = 0.1140;
+
+
+            double N = Width * Height;
+            var (meanR, meanG, meanB) = colorMean();
+            
+            double varianceR = 0;
+            double varianceG = 0;
+            double varianceB = 0;
+            
+            for (int i = 0; i < Width; i++){
+                for (int j = 0; j < Height; j++){
+                    varianceR += (tree.GetPixel(i, j, TopLeft).R - meanR) * (tree.GetPixel(i, j, TopLeft).R - meanR);
+                    varianceG += (tree.GetPixel(i, j, TopLeft).G - meanG) * (tree.GetPixel(i, j, TopLeft).G - meanG);
+                    varianceB += (tree.GetPixel(i, j, TopLeft).B - meanB) * (tree.GetPixel(i, j, TopLeft).B - meanB);
+                }
+            }
+            varianceR = varianceR / N;
+            varianceG = varianceG / N;
+            varianceB = varianceB / N;
+
+            double ssimR = (C2 / (C2 + varianceR));
+            double ssimG = (C2 / (C2 + varianceG));
+            double ssimB = (C2 / (C2 + varianceB));
+
+            double result = WR * ssimR + WG * ssimG + WB * ssimB;
+            return result;
         }
 
         public (double, double, double) colorMean(){
