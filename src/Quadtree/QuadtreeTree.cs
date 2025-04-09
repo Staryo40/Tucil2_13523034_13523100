@@ -98,6 +98,40 @@ namespace Quadtree{
             return image;
         }
 
+        public Rgba32[,] CreateImageAtDepth(int n)
+        {
+            // Function that creates the compressed image based on the Quadtree that is built
+            float m = 1;  // scaling
+            int dx = 0, dy = 0; // padding
+
+            int imageWidth = (int)(root.Width * m + dx);
+            int imageHeight = (int)(root.Height * m + dy);
+
+            var image = new Rgba32[imageWidth, imageHeight];
+
+            var leafNodesDepth = GetLeafNodesAtDepth(n);
+
+            foreach (var node in leafNodesDepth)
+            {
+                var (t, l, r, b) = node.GetBorders();
+                var(meanR, meanG, meanB) = node.colorMean();
+                Rgba32 avgColor = new Rgba32((byte)meanR, (byte)meanG, (byte)meanB, 255);
+
+                for (int y = t; y < b; y++)
+                {
+                    for (int x = l; x < r; x++)
+                    {
+                        if (x >= 0 && x < imageWidth && y >= 0 && y < imageHeight)
+                        {
+                            image[x, y] = avgColor;
+                        }
+                    }
+                }
+            }
+
+            return image;
+        }
+
         private List<QuadtreeNode> GetLeafNodesAtDepth(int depth)
         {
             // MIGHT BECOME LEGACY
@@ -110,7 +144,7 @@ namespace Quadtree{
         private void CollectLeafNodesAtDepth(QuadtreeNode node, int depth, List<QuadtreeNode> leafNodes)
         {
             // Procedure to collect leaf nodes up to the specified depth
-            if (node.IsLeaf || node.Depth == depth)
+            if (node.Depth == depth || node.IsLeaf)
             {
                 leafNodes.Add(node);
             }

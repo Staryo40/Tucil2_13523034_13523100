@@ -15,6 +15,26 @@ class Program
 
         (Rgba32[,] image, long oriFileSize) = InputHandler.GetImage();
 
+        Console.Clear();
+        InputHandler.ShowInputStatus();
+
+        // Start looping progress bar animation
+        CancellationTokenSource cts = new CancellationTokenSource();
+        var loadingTask = Task.Run(() => InputHandler.ShowLoopingProgressBar("Memproses input", cts.Token));
+
+        QuadtreeArray minMax = new QuadtreeArray(image, oriFileSize, 2);
+        minMax.CreateMinMaxImages();
+
+        // Stop animation
+        cts.Cancel();
+        loadingTask.Wait();
+
+        // Set thresholds
+        InputHandler.MinTargetThreshold = minMax.CompressionRates[0];
+        InputHandler.MaxTargetThreshold = minMax.CompressionRates[1];
+
+        Console.WriteLine(); 
+
         int errorMethod = InputHandler.GetErrorMethod();
         double threshold = InputHandler.GetThreshold();
         int minimumBlock = InputHandler.GetMinimumBlock();
@@ -33,19 +53,19 @@ class Program
         Console.ResetColor();
 
         // GIF Processing
-        QuadtreeArray ta = new QuadtreeArray(image, oriFileSize, 2);
-        ta.CreateGIFImages();
+        // QuadtreeArray ta = new QuadtreeArray(image, oriFileSize, 2);
+        // ta.CreateGIFImages();
         
-        long gifExecutionTime = 0;
-        for (int i = 0; i < ta.ExecutionTimes.Count; i++){
-            gifExecutionTime += ta.ExecutionTimes[i];
-        }
+        // long gifExecutionTime = 0;
+        // for (int i = 0; i < ta.ExecutionTimes.Count; i++){
+        //     gifExecutionTime += ta.ExecutionTimes[i];
+        // }
 
         // Image Processing
         long startTimeImage = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
 
         QuadtreeTree t = new QuadtreeTree(image, image.GetLength(0), image.GetLength(1), minimumBlock, errorMethod, threshold);
-        Rgba32[,] outputArray = t.CreateImage();
+        Rgba32[,] outputArray = t.CreateImageAtDepth(11);
 
         long endTimeImage = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
         #endregion
@@ -60,7 +80,7 @@ class Program
         // string gifOutputPath = @"C:\Users\Aryo\PersonalMade\ITB Kuliah Semesteran\Semester 4\Strategi Algoritma\Tucil-Tubes 2025\Tucil2_13523034_13523100\src\output.gif";
 
         OutputHandler.SaveImage(imageOutputPath, outputArray);
-        OutputHandler.SaveGIF(gifOutputPath, ta.Buffer);
+        // OutputHandler.SaveGIF(gifOutputPath, ta.Buffer);
 
         Console.WriteLine("Kedalaman Pohon: " + t.maxDepth);
         Console.WriteLine("Jumlah Simpul: " + t.nodeCount);
@@ -74,7 +94,7 @@ class Program
         float compPercentage = (1 - (float) compFileSize / (float) oriFileSize) * 100f;
         Console.WriteLine("Persentase kompresi: " + compPercentage + "%");
 
-        Console.WriteLine("Waktu eksekusi buat GIF: " + gifExecutionTime + " ms");
+        // Console.WriteLine("Waktu eksekusi buat GIF: " + gifExecutionTime + " ms");
         // for (int i = 0; i < ta.CompressionRates.Count; i++)
         // {
         //     Console.WriteLine($"compression {i} = {ta.CompressionRates[i]}");

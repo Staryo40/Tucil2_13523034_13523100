@@ -15,7 +15,8 @@ namespace IOHandler
         public static float CompressionRateTarget = -1;
         public static string ImageOutputAddress = "";
         public static string GIFOutputAddress = "";
-
+        public static float MinTargetThreshold = -1;
+        public static float MaxTargetThreshold = -1;
         public static (Rgba32[,], long) GetImage()
         {
             string? absolutePath;
@@ -238,16 +239,23 @@ namespace IOHandler
             {
                 Console.Clear();
                 ShowInputStatus();
-                if (InputError != ""){
+
+                Console.ForegroundColor = ConsoleColor.Cyan;
+                Console.WriteLine("   NILAI PERSENTASI KOMPRESI YANG VALID");
+                Console.ResetColor();
+                Console.WriteLine("A. Input 0 jika ingin mematikan fitur ini");
+                Console.WriteLine("B. Input 1 jika tidak ingin kompresi gambar");
+                Console.WriteLine("C. Selain 0 dan 1, range valid adalah " +  MinTargetThreshold.ToString("F3") + "-" + MaxTargetThreshold.ToString("F3"));
+                Console.WriteLine("");
+
+                 if (InputError != ""){
                     ShowInputError();
                 }
-
-                Console.Write("Masukkan target persentase kompresi (0 jika tidak ada target) [0-1]: ");
+                Console.Write("Masukkan target persentase kompresi: ");
                 string? input = Console.ReadLine()?.Trim();
                 
                 if (input == null)
                 {
-                    // Console.WriteLine("Input tidak valid, harap masukkan angka yang valid.");
                     InputError = "Input tidak valid, harap masukkan angka yang valid.";
                     continue;
                 }
@@ -256,10 +264,14 @@ namespace IOHandler
                 {
                     value = Convert.ToSingle(input);
 
-                    if (value < 0 || value > 1)
+                    bool isValid =
+                    value == 0 ||
+                    value == 1 ||
+                    (value > MinTargetThreshold && value < MaxTargetThreshold);
+
+                    if (!isValid)
                     {
-                        // Console.WriteLine("Input tidak valid, harap masukkan angka 0-1.");
-                        InputError = "Input tidak valid, harap masukkan angka 0-1.";
+                        InputError = $"Input harus 0, 1, atau dalam rentang {MinTargetThreshold:F3} hingga {MaxTargetThreshold:F3}.";
                         continue;
                     }
 
@@ -373,6 +385,34 @@ namespace IOHandler
         {
             Console.WriteLine(InputError);
         }
+
+        public static void ShowLoopingProgressBar(string message, CancellationToken token)
+        {
+            int width = 30;
+            int position = 0;
+
+            while (!token.IsCancellationRequested)
+            {
+                string bar = new string('■', position).PadRight(width, ' ');
+                Console.SetCursorPosition(0, Console.CursorTop);
+                Console.Write($"{message} [{bar}]");
+
+                Thread.Sleep(50);
+
+                position++;
+
+                if (position > width)
+                {
+                    position = 0;
+                    Thread.Sleep(200); // Pause briefly when full before restarting
+                }
+            }
+
+            // Clear the bar line after done
+            Console.SetCursorPosition(0, Console.CursorTop);
+            Console.Write(new string(' ', Console.WindowWidth));
+            Console.SetCursorPosition(0, Console.CursorTop);
+        }
     }
 
     public static class OutputHandler
@@ -431,6 +471,7 @@ namespace IOHandler
 
             return image;
         }
+
 
     }
 }
