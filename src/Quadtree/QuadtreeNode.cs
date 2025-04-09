@@ -99,6 +99,44 @@ namespace Quadtree{
             Children = (topLeft, topRight, bottomLeft, bottomRight);
         }
 
+        public void merge(){
+            // Check if still above error threshold
+            double errorValue = tree.thresholdMethod switch
+            {
+                1 => this.errorVariance(),
+                2 => this.errorMAD(),
+                3 => this.errorMaxPixDiff(),
+                4 => this.errorEntropy(),
+                5 => this.errorSSIM(),
+                _ => this.errorVariance()
+            };
+
+            if (errorValue <= tree.errorThreshold)
+            {
+                this.removeChildren();
+                this.IsLeaf = true;
+                tree.leafNodes.Add(this);
+                tree.leafCount += 1;
+                return;
+            }
+        }
+
+        public void removeChildren(){
+            // Procedure to remove children of a node
+            if (this.IsLeaf || this.Children == null) {
+                tree.leafNodes.Remove(this);
+                tree.leafCount -= 1;
+                return;
+            }
+
+            (QuadtreeNode topLeft, QuadtreeNode topRight, QuadtreeNode bottomLeft, QuadtreeNode bottomRight) = this.Children.Value;
+            topLeft.removeChildren();
+            topRight.removeChildren();
+            bottomLeft.removeChildren();
+            bottomRight.removeChildren();
+            this.Children = null;
+        }
+
         public double errorVariance(){
             // Error measurement using Variance of the three color channels
             double N = Width * Height;
