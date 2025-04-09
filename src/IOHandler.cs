@@ -369,7 +369,6 @@ namespace IOHandler
             Console.WriteLine();
         }
 
-
         public static void ShowInputError()
         {
             Console.WriteLine(InputError);

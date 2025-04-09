@@ -18,6 +18,7 @@ namespace Quadtree{
         public int leafCount { get; set; }
         public int maxDepth { get; set; }
         public List<QuadtreeNode> leafNodes { get; set; }
+        
         public QuadtreeTree(Rgba32[,] i, int width, int height, int mb, int tm, double t){
             // User-defined Constructor
             this.Image = i;

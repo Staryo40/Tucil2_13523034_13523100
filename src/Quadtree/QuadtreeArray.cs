@@ -21,6 +21,7 @@ namespace Quadtree{
             this.ExecutionTimes = new List<long>();
             this.CompressionRates = new List<float>();
         }
+
         public void CreateGIFImages(){
             for (int i = 0; i < 10; i++){
                 int imageWidth = OriginalImage.GetLength(0);
@@ -44,6 +45,7 @@ namespace Quadtree{
             }
             Console.WriteLine("");
         }
+
         public static long GetExpectedFileSize(Rgba32[,] pixelMatrix, int extension)
         {
             using var image = MatrixToImage(pixelMatrix);
@@ -63,6 +65,7 @@ namespace Quadtree{
 
             return ms.Length;
         }
+        
         private static Image<Rgba32> MatrixToImage(Rgba32[,] matrix)
         {
             int width = matrix.GetLength(0);

@@ -22,7 +22,6 @@ namespace Quadtree{
             Height = 0;  
             IsLeaf = false;
         }
-
         public QuadtreeNode(QuadtreeTree t, (int, int) tl, int d, int w, int h, (QuadtreeNode, QuadtreeNode, QuadtreeNode, QuadtreeNode)? c = null)
         {
             // User defined constructor
@@ -123,6 +122,7 @@ namespace Quadtree{
             double result = (varianceR + varianceG + varianceB) / 3;
             return result;
         }
+
         public double errorMAD(){
             // Error measurement using Mean Absolute Deviation of the three color channels
             double N = Width * Height;
@@ -147,6 +147,7 @@ namespace Quadtree{
             double result = (madR + madG + madB) / 3;
             return result;
         }
+
         public double errorMaxPixDiff(){
             // Error measurement using Max Pixel Difference of the three color channels
             double maxR = tree.GetPixel(0, 0, TopLeft).R;
@@ -178,6 +179,7 @@ namespace Quadtree{
             double result = (diffR + diffG + diffB) / 3;
             return result; 
         }
+
         public double errorEntropy(){
             // Error measurement using entropy of the three color channels
             double N = Width * Height;
@@ -220,10 +222,12 @@ namespace Quadtree{
             double result = (redEntropy + greenEntropy + blueEntropy) / 3;
             return result;
         }
+
         public double errorSSIM(){
             // Error measurement using ...
             return 0;
         }
+
         public (double, double, double) colorMean(){
             // Function to return the mean of each color channel in a node
             double N = Width * Height;
@@ -246,5 +250,6 @@ namespace Quadtree{
 
             return (meanR, meanG, meanB);
         }
+
     }
 }
