@@ -244,8 +244,7 @@ namespace IOHandler
                 Console.WriteLine("   NILAI PERSENTASI KOMPRESI YANG VALID");
                 Console.ResetColor();
                 Console.WriteLine("A. Input 0 jika ingin mematikan fitur ini");
-                Console.WriteLine("B. Input 1 jika tidak ingin kompresi gambar");
-                Console.WriteLine("C. Selain 0 dan 1, range valid adalah " +  MinTargetThreshold.ToString("F3") + "-" + MaxTargetThreshold.ToString("F3"));
+                Console.WriteLine("B. Selain 0, range valid adalah " +  MinTargetThreshold.ToString("F3") + "-" + MaxTargetThreshold.ToString("F3"));
                 Console.WriteLine("");
 
                  if (InputError != ""){
@@ -264,14 +263,11 @@ namespace IOHandler
                 {
                     value = Convert.ToSingle(input);
 
-                    bool isValid =
-                    value == 0 ||
-                    value == 1 ||
-                    (value > MinTargetThreshold && value < MaxTargetThreshold);
+                    bool isValid = value == 0 || (value > MinTargetThreshold && value < MaxTargetThreshold);
 
                     if (!isValid)
                     {
-                        InputError = $"Input harus 0, 1, atau dalam rentang {MinTargetThreshold:F3} hingga {MaxTargetThreshold:F3}.";
+                        InputError = $"Input harus 0 atau dalam rentang {MinTargetThreshold:F3} hingga {MaxTargetThreshold:F3}.";
                         continue;
                     }
 
