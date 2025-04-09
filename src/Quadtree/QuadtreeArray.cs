@@ -46,6 +46,25 @@ namespace Quadtree{
             Console.WriteLine("");
         }
 
+        public void CreateMinMaxImages(){
+            int imageWidth = OriginalImage.GetLength(0);
+            int imageHeight = OriginalImage.GetLength(1);
+            int minimalBlock = (int)((imageWidth / Math.Pow(2, 11)) * (imageHeight / Math.Pow(2, 11)));
+
+            QuadtreeTree t = new QuadtreeTree(OriginalImage, imageWidth, imageHeight, minimalBlock, 1, 0);
+            Rgba32[,] outputArrayZero = t.CreateImageAtDepth(0);
+            Rgba32[,] outputArrayEleven = t.CreateImageAtDepth(11);
+
+            float compressionMax = 1 - ((float) GetExpectedFileSize(outputArrayZero, Extension) / (float) OriginalSize);
+            float compressionMin = 1 - ((float) GetExpectedFileSize(outputArrayEleven, Extension) / (float) OriginalSize);
+            Buffer.Add(outputArrayZero);
+            Buffer.Add(outputArrayEleven);
+            CompressionRates.Add(compressionMin);
+            CompressionRates.Add(compressionMax);
+            
+            Console.WriteLine("");
+        }
+
         public static long GetExpectedFileSize(Rgba32[,] pixelMatrix, int extension)
         {
             using var image = MatrixToImage(pixelMatrix);
