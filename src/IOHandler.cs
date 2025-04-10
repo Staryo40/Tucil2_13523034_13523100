@@ -161,7 +161,6 @@ namespace IOHandler
                 
                 if (input == null)
                 {
-                    // Console.WriteLine("Input tidak valid, harap masukkan angka yang valid.");
                     InputError = "Input tidak valid, harap masukkan angka yang valid.";
                     continue;
                 }
@@ -172,7 +171,6 @@ namespace IOHandler
 
                     if (value < 0)
                     {
-                        // Console.WriteLine("Input tidak valid, harap masukkan angka >= 0.");
                         InputError = "Input tidak valid, harap masukkan angka >= 0.";
                         continue;
                     }
@@ -184,7 +182,6 @@ namespace IOHandler
                 }
                 catch
                 {
-                    // Console.WriteLine("Input tidak valid, harap masukkan alamat yang valid.");
                     InputError = "Input tidak valid, harap masukkan alamat yang valid.";
                     continue;
                 }
@@ -208,7 +205,6 @@ namespace IOHandler
                 
                 if (input == null)
                 {
-                    // Console.WriteLine("Input tidak valid, harap masukkan angka yang valid.");
                     InputError = "Input tidak valid, harap masukkan angka yang valid.";
                     continue;
                 }
@@ -224,7 +220,6 @@ namespace IOHandler
                 }
                 catch
                 {
-                    // Console.WriteLine("Input tidak valid, harap masukkan alamat yang valid.");
                     InputError = "Input tidak valid, harap masukkan alamat yang valid.";
                     continue;
                 }
@@ -243,8 +238,9 @@ namespace IOHandler
                 Console.ForegroundColor = ConsoleColor.Cyan;
                 Console.WriteLine("   NILAI PERSENTASI KOMPRESI YANG VALID");
                 Console.ResetColor();
-                Console.WriteLine("A. Input 0 jika ingin mematikan fitur ini");
-                Console.WriteLine("B. Selain 0, range valid adalah " +  MinTargetThreshold.ToString("F3") + "-" + MaxTargetThreshold.ToString("F3"));
+                Console.WriteLine("Inputlah dalam range 0-1 dengan 0 berarti mematikan target kompresi.");
+                Console.WriteLine("Walaupun range 0 hingga 1, terdapat range yang tidak dapat dicapai oleh kompresi.");
+                Console.WriteLine("Dalam kasus tersebut, program akan menampilkan nilai minimal/maximal yang mendekati nilai tersebut.");
                 Console.WriteLine("");
 
                  if (InputError != ""){
@@ -263,14 +259,6 @@ namespace IOHandler
                 {
                     value = Convert.ToSingle(input);
 
-                    bool isValid = value == 0 || (value > MinTargetThreshold && value < MaxTargetThreshold);
-
-                    if (!isValid)
-                    {
-                        InputError = $"Input harus 0 atau dalam rentang {MinTargetThreshold:F3} hingga {MaxTargetThreshold:F3}.";
-                        continue;
-                    }
-
                     InputError = "";
                     CompressionRateTarget = value;
 
@@ -278,7 +266,6 @@ namespace IOHandler
                 }
                 catch
                 {
-                    // Console.WriteLine("Input tidak valid, harap masukkan alamat yang valid.");
                     InputError = "Input tidak valid, harap masukkan alamat yang valid.";
                     continue;
                 }
@@ -303,7 +290,6 @@ namespace IOHandler
                 {
                     if (absolutePath == null)
                     {
-                        // Console.WriteLine("Input tidak valid, harap masukkan alamat yang valid.");
                         InputError = "Input tidak valid, harap masukkan alamat yang valid.";
                         continue;
                     }
@@ -314,7 +300,6 @@ namespace IOHandler
                     }
                     else if (!absolutePath.EndsWith(extension, StringComparison.OrdinalIgnoreCase))
                     {
-                        // Console.WriteLine("Ekstensi file tidak sesuai!");
                         InputError = "Ekstensi file tidak sesuai!";
                         continue;
                     }
@@ -323,17 +308,16 @@ namespace IOHandler
 
                     if (directory == null || !Directory.Exists(directory))
                     {
-                        // Console.WriteLine("Direktori tidak ditemukan!");
                         InputError = "Direktori tidak ditemukan!";
                         continue;
                     }
 
                     if (File.Exists(absolutePath))
                     {
-                        Console.Write("File sudah ada! Apakah ingin menggantinya (y/n)? ");
+                        Console.Write("File sudah ada! Apakah ingin mengganti file yang sudah ada (y/n)? ");
                         string? response = Console.ReadLine()?.Trim().ToLower();
 
-                        if (response == "y")
+                        if (response != "y")
                         {
                             continue;
                         }
@@ -350,7 +334,6 @@ namespace IOHandler
                 }
                 catch
                 {
-                    // Console.WriteLine("Input tidak valid, harap masukkan alamat yang valid.");
                     InputError = "Input tidak valid, harap masukkan alamat yang valid.";
                     continue;
                 }
@@ -359,29 +342,23 @@ namespace IOHandler
 
         public static void ShowInputStatus()
         {
-            // string header = " STATUS INPUT ";
-            // int sidePadding = (Console.WindowWidth - header.Length) / 4;
-            // string line = new string('=', sidePadding) + header + new string('=', sidePadding);
-            // Console.WriteLine(line);
             Console.ForegroundColor = ConsoleColor.Cyan;
             Console.WriteLine("   STATUS INPUT");
             Console.ResetColor();
 
             Console.WriteLine($"1. Alamat gambar     : {(string.IsNullOrEmpty(InputAddress) ? "[belum diisi]" : InputAddress)}");
             Console.WriteLine($"2. Metode error      : {(string.IsNullOrEmpty(ErrorThresholdMethod) ? "[belum diisi]" : ErrorThresholdMethod)}");
-            Console.WriteLine($"3. Threshold error   : {(ErrorThreshold < 0 ? "[belum diisi]" : ErrorThreshold.ToString())}");
-            Console.WriteLine($"4. Minimum block     : {(MinimumBlock < 0 ? "[belum diisi]" : MinimumBlock.ToString())}");
-            Console.WriteLine($"5. Target kompresi   : {(CompressionRateTarget < 0 ? "[belum diisi]" : CompressionRateTarget.ToString())}");
+            Console.WriteLine($"3. Target kompresi   : {(CompressionRateTarget < 0 ? "[belum diisi]" : CompressionRateTarget.ToString())}");
+            Console.WriteLine($"4. Threshold error   : {(CompressionRateTarget > 0 ? "XXX" : (ErrorThreshold < 0 ? "[belum diisi]" : ErrorThreshold.ToString()))}");
+            Console.WriteLine($"5. Minimum block     : {(CompressionRateTarget > 0 ? "XXX" : (MinimumBlock < 0 ? "[belum diisi]" : MinimumBlock.ToString()))}");
             Console.WriteLine($"6. Output image path : {(string.IsNullOrEmpty(ImageOutputAddress) ? "[belum diisi]" : ImageOutputAddress)}");
             Console.WriteLine($"7. Output GIF path   : {(string.IsNullOrEmpty(GIFOutputAddress) ? "[belum diisi]" : GIFOutputAddress)}");
             Console.WriteLine();
         }
-
         public static void ShowInputError()
         {
             Console.WriteLine(InputError);
         }
-
         public static void ShowLoopingProgressBar(string message, CancellationToken token)
         {
             int width = 30;
@@ -400,14 +377,22 @@ namespace IOHandler
                 if (position > width)
                 {
                     position = 0;
-                    Thread.Sleep(200); // Pause briefly when full before restarting
+                    Thread.Sleep(200); 
                 }
             }
 
-            // Clear the bar line after done
             Console.SetCursorPosition(0, Console.CursorTop);
             Console.Write(new string(' ', Console.WindowWidth));
             Console.SetCursorPosition(0, Console.CursorTop);
+        }
+        public static int getImageExtensionNum(){
+            if (ImageExtensionType == ".jpeg" || ImageExtensionType == ".jpg"){
+                return 2;
+            } else if (ImageExtensionType == ".png"){
+                return 1;
+            } else {
+                return -1;
+            }
         }
     }
 
