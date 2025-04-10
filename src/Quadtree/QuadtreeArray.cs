@@ -22,26 +22,23 @@ namespace Quadtree{
             this.CompressionRates = new List<float>();
         }
 
-        public void CreateGIFImages(){
-            for (int i = 0; i < 10; i++){
-                int imageWidth = OriginalImage.GetLength(0);
-                int imageHeight = OriginalImage.GetLength(1);
-                int minimalBlock = (int)((imageWidth / Math.Pow(2, i)) * (imageHeight / Math.Pow(2, i)));
-
+        public void CreateGIFImages(QuadtreeTree t){
+            for (int i = 0; i <= t.maxDepth; i++){
                 long startTime = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
 
-                QuadtreeTree t = new QuadtreeTree(OriginalImage, imageWidth, imageHeight, minimalBlock, 1, 0);
-                Rgba32[,] outputArray = t.CreateImage();
+                Rgba32[,] outputArray = t.CreateImageAtDepth(i);
                 
                 long endTime = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
 
-                
-                float compression = 1 - ((float) GetExpectedFileSize(outputArray, Extension) / (float) OriginalSize);
                 ExecutionTimes.Add(endTime-startTime);
                 Buffer.Add(outputArray);
-                CompressionRates.Add(compression);
 
-                Console.Write($"\rCurrently completed GIF images: {i + 1}/10");
+                int total = t.maxDepth + 1;
+                int current = i + 1;
+
+                // Generate the bar
+                string bar = new string('■', current);
+                Console.Write($"\rCurrently completed GIF images: [{bar.PadRight(total)}] {current}/{total}");
             }
             Console.WriteLine("");
         }
@@ -64,7 +61,19 @@ namespace Quadtree{
             
             Console.WriteLine("");
         }
+        public void CreateMinImage(){
+            int imageWidth = OriginalImage.GetLength(0);
+            int imageHeight = OriginalImage.GetLength(1);
 
+            QuadtreeTree t = new QuadtreeTree(OriginalImage, imageWidth, imageHeight, 0, 1, 0);
+            Rgba32[,] outputArrayZero = t.CreateImageAtDepth(0);
+
+            float compressionMax = 1 - ((float) GetExpectedFileSize(outputArrayZero, Extension) / (float) OriginalSize);
+            Buffer.Add(outputArrayZero);
+            CompressionRates.Add(compressionMax);
+            
+            Console.WriteLine("");
+        }
         public static long GetExpectedFileSize(Rgba32[,] pixelMatrix, int extension)
         {
             using var image = MatrixToImage(pixelMatrix);
