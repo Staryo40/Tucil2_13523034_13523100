@@ -130,6 +130,10 @@ class Program
 
         Console.WriteLine("Waktu eksekusi gambar: " + (endTimeImage - startTimeImage) + " ms");
         Console.WriteLine("Waktu eksekusi GIF: " + (gifExecutionTime) + " ms");
+        if (targetCompression != 0) {
+            Console.WriteLine("Ambang atas error: " + threshold);
+            Console.WriteLine("Ukuran blok minimum: " + minimumBlock);
+        }
         Console.WriteLine("Kedalaman Pohon: " + t.maxDepth);
         Console.WriteLine("Jumlah Simpul: " + t.nodeCount);
         Console.WriteLine("Jumlah Daun: " + t.leafCount);
