@@ -7,6 +7,14 @@ using SixLabors.ImageSharp.PixelFormats;
 
 class Program
 {
+    const int MAX_SEARCH = 10;
+    const float TARGET_RANGE = 0.01f;
+    const double MAX_POSSIBLE_VARIANCE = 16256.25;
+    const double MAX_POSSIBLE_MAD = 63.75;
+    const double MAX_POSSIBLE_MVP = 255;
+    const double MAX_POSSIBLE_ENTROPY = 8;
+    const double MAX_POSSIBLE_SSIM = 1;
+
     static void Main()
     {
         #region inputs
@@ -15,7 +23,7 @@ class Program
         float targetCompression = InputHandler.GetTargetCompression();
 
         int minimumBlock = 1;
-        double threshold = 0;
+        double threshold = 10;
         if (targetCompression == 0){
             threshold = InputHandler.GetThreshold();
             minimumBlock = InputHandler.GetMinimumBlock();
@@ -52,10 +60,42 @@ class Program
 
             startTimeImage = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
 
-            // Binary Search get error 
-            t = new QuadtreeTree(image, image.GetLength(0), image.GetLength(1), 1, errorMethod, threshold); // change threshold with the one got from binary search
-            outputArray = t.CreateImage();
+            double leftBound = 0;
+            double rightBound = errorMethod switch {
+                1 => MAX_POSSIBLE_VARIANCE,
+                2 => MAX_POSSIBLE_MAD,
+                3 => MAX_POSSIBLE_MVP,
+                4 => MAX_POSSIBLE_ENTROPY,
+                5 => MAX_POSSIBLE_SSIM,
+                _ => MAX_POSSIBLE_VARIANCE
+            };
 
+            minimumBlock = (int) (image.GetLength(0) * image.GetLength(1) * 0.00001);
+            Console.WriteLine("Minimum block : " + (minimumBlock).ToString());
+
+            // Binary search
+            int itr = 0;
+            while (true)
+            {
+                threshold = leftBound + (rightBound - leftBound) / 2;
+                t = new QuadtreeTree(image, image.GetLength(0), image.GetLength(1), minimumBlock, errorMethod, threshold);
+
+                outputArray = t.CreateImage();
+                OutputHandler.SaveImage(imageOutputPath, outputArray);
+                long tempSize = new FileInfo(imageOutputPath).Length;
+                float tempPercentage = (1 - (float) tempSize / (float) oriFileSize);
+
+                Console.WriteLine("Trying : " + threshold.ToString() + ", " + tempPercentage.ToString() + " -> " + targetCompression.ToString());
+
+                if (MathF.Abs(tempPercentage - targetCompression) < TARGET_RANGE || itr >= 20)
+                    break;
+                else if (targetCompression > tempPercentage)
+                    leftBound = threshold;
+                else
+                    rightBound = threshold;
+
+                itr++;
+            }
             endTimeImage = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
         }
         // GIF processing

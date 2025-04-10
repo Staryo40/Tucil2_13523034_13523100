@@ -64,6 +64,12 @@ namespace Quadtree{
             buildTree(bottomRight);
         }
 
+        public void updateThreshold(double t){
+            double prevThreshold = errorThreshold;
+            errorThreshold = t;
+            updateTree(root, prevThreshold);
+        }
+
         public void updateTree(QuadtreeNode r, double prevThreshold)
         {
             // Procedure to update Quadtree with the parameters given for image compression
@@ -71,6 +77,8 @@ namespace Quadtree{
             {
                 if (r.IsLeaf || r.Children == null)
                 {
+                    r.IsLeaf = false;
+                    
                     buildTree(r);
                 }
                 else
