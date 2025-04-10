@@ -67,27 +67,28 @@ namespace Quadtree{
         public void updateThreshold(double t){
             double prevThreshold = errorThreshold;
             errorThreshold = t;
-            updateTree(root, prevThreshold);
+            updateNodeThreshold(root, prevThreshold);
         }
 
-        public void updateTree(QuadtreeNode r, double prevThreshold)
+        public void updateNodeThreshold(QuadtreeNode r, double prevThreshold)
         {
             // Procedure to update Quadtree with the parameters given for image compression
-            if (this.errorThreshold > prevThreshold)
+            if (this.errorThreshold < prevThreshold)
             {
                 if (r.IsLeaf || r.Children == null)
                 {
                     r.IsLeaf = false;
-                    
+                    leafNodes.Remove(r);
+                    leafCount -= 1;
                     buildTree(r);
                 }
                 else
                 {
                     (QuadtreeNode topLeft, QuadtreeNode topRight, QuadtreeNode bottomLeft, QuadtreeNode bottomRight) = r.Children.Value;
-                    updateTree(topLeft, prevThreshold);
-                    updateTree(topRight, prevThreshold);
-                    updateTree(bottomLeft, prevThreshold);
-                    updateTree(bottomRight, prevThreshold);
+                    updateNodeThreshold(topLeft, prevThreshold);
+                    updateNodeThreshold(topRight, prevThreshold);
+                    updateNodeThreshold(bottomLeft, prevThreshold);
+                    updateNodeThreshold(bottomRight, prevThreshold);
                 }
             }
             else
@@ -105,10 +106,10 @@ namespace Quadtree{
                     }
 
                     (QuadtreeNode topLeft, QuadtreeNode topRight, QuadtreeNode bottomLeft, QuadtreeNode bottomRight) = r.Children.Value;
-                    updateTree(topLeft, prevThreshold);
-                    updateTree(topRight, prevThreshold);
-                    updateTree(bottomLeft, prevThreshold);
-                    updateTree(bottomRight, prevThreshold);
+                    updateNodeThreshold(topLeft, prevThreshold);
+                    updateNodeThreshold(topRight, prevThreshold);
+                    updateNodeThreshold(bottomLeft, prevThreshold);
+                    updateNodeThreshold(bottomRight, prevThreshold);
                 }
             }
         }

@@ -43,8 +43,8 @@ class Program
 
         long startTimeImage;
         long endTimeImage;
-        QuadtreeTree t;
-        Rgba32[,] outputArray;
+        QuadtreeTree t = null!;
+        Rgba32[,] outputArray = null!;
 
         if (targetCompression == 0){ // NO compression target
             // Image processing
@@ -60,41 +60,55 @@ class Program
 
             startTimeImage = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
 
-            double leftBound = 0;
-            double rightBound = errorMethod switch {
-                1 => MAX_POSSIBLE_VARIANCE,
-                2 => MAX_POSSIBLE_MAD,
-                3 => MAX_POSSIBLE_MVP,
-                4 => MAX_POSSIBLE_ENTROPY,
-                5 => MAX_POSSIBLE_SSIM,
-                _ => MAX_POSSIBLE_VARIANCE
-            };
-
-            minimumBlock = (int) (image.GetLength(0) * image.GetLength(1) * 0.00001);
+            int dimensions = image.GetLength(0) * image.GetLength(1);
             Console.WriteLine("Minimum block : " + (minimumBlock).ToString());
 
             // Binary search
-            int itr = 0;
-            while (true)
-            {
+            
+            for (minimumBlock = (int) (dimensions * 0.0001); minimumBlock >= 1; minimumBlock /= 4) {
+                double leftBound = 0;
+                double rightBound = errorMethod switch {
+                    1 => MAX_POSSIBLE_VARIANCE,
+                    2 => MAX_POSSIBLE_MAD,
+                    3 => MAX_POSSIBLE_MVP,
+                    4 => MAX_POSSIBLE_ENTROPY,
+                    5 => MAX_POSSIBLE_SSIM,
+                    _ => MAX_POSSIBLE_VARIANCE
+                };
+
                 threshold = leftBound + (rightBound - leftBound) / 2;
                 t = new QuadtreeTree(image, image.GetLength(0), image.GetLength(1), minimumBlock, errorMethod, threshold);
 
-                outputArray = t.CreateImage();
-                OutputHandler.SaveImage(imageOutputPath, outputArray);
-                long tempSize = new FileInfo(imageOutputPath).Length;
-                float tempPercentage = (1 - (float) tempSize / (float) oriFileSize);
+                float tempPercentage;
+                bool alwaysDecrease = true;
+                int itr = 0;
+                while (true)
+                {
+                    outputArray = t.CreateImage();
+                    OutputHandler.SaveImage(imageOutputPath, outputArray);
+                    long tempSize = new FileInfo(imageOutputPath).Length;
+                    tempPercentage = (1 - (float) tempSize / (float) oriFileSize);
 
-                Console.WriteLine("Trying : " + threshold.ToString() + ", " + tempPercentage.ToString() + " -> " + targetCompression.ToString());
+                    Console.WriteLine("Trying : " + threshold.ToString() + ", " + tempPercentage.ToString() + " -> " + targetCompression.ToString());
 
-                if (MathF.Abs(tempPercentage - targetCompression) < TARGET_RANGE || itr >= 20)
-                    break;
-                else if (targetCompression > tempPercentage)
-                    leftBound = threshold;
-                else
-                    rightBound = threshold;
+                    if (MathF.Abs(tempPercentage - targetCompression) < TARGET_RANGE || itr >= 10)
+                        break;
+                    else if (targetCompression > tempPercentage) {
+                        leftBound = threshold;
+                        alwaysDecrease = false;
+                    }
+                    else
+                        rightBound = threshold;
 
-                itr++;
+                    threshold = leftBound + (rightBound - leftBound) / 2;
+                    t.updateThreshold(threshold);
+                    Console.WriteLine(t.maxDepth + ", " + t.nodeCount + ", " + t.leafCount);
+
+                    itr++;
+                }
+
+                if (!alwaysDecrease) break;
+                if (MathF.Abs(tempPercentage - targetCompression) < TARGET_RANGE) break;
             }
             endTimeImage = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
         }
