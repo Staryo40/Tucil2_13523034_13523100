@@ -1,7 +1,6 @@
 using System;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Processing;
 
 namespace Quadtree{
     class QuadtreeNode
@@ -12,9 +11,11 @@ namespace Quadtree{
         public int Width { get; private set; }
         public int Height { get; private set; }
         public bool IsLeaf;
+
         public (QuadtreeNode, QuadtreeNode, QuadtreeNode, QuadtreeNode)? Children; // topleft, topright, bottomleft, bottomright
 
         public QuadtreeNode(QuadtreeTree t){
+            // Default constructor
             tree = t;
             Depth = 0;
             Children = null;
@@ -22,9 +23,9 @@ namespace Quadtree{
             Height = 0;  
             IsLeaf = false;
         }
-
         public QuadtreeNode(QuadtreeTree t, (int, int) tl, int d, int w, int h, (QuadtreeNode, QuadtreeNode, QuadtreeNode, QuadtreeNode)? c = null)
         {
+            // User defined constructor
             tree = t;
             Depth = d;
             Children = c;
@@ -44,6 +45,8 @@ namespace Quadtree{
         }
 
         public void split(){
+            // Procedure to split the node, giving four children to the node if conditions are met
+
             // Check if still above error threshold
             double errorValue = tree.thresholdMethod switch
             {
@@ -58,6 +61,7 @@ namespace Quadtree{
             if (errorValue <= tree.errorThreshold)
             {
                 this.IsLeaf = true;
+                tree.leafNodes.Add(this);
                 tree.leafCount += 1;
                 return;
             }
@@ -76,6 +80,7 @@ namespace Quadtree{
             // Check if still above minimum block size
             if (widthLeft * heightTop < tree.minimumBlock || widthLeft == 0 || widthRight == 0 || heightTop == 0 || heightBottom == 0){
                 this.IsLeaf = true;
+                tree.leafNodes.Add(this);
                 tree.leafCount += 1;
                 return;
             }
@@ -94,7 +99,46 @@ namespace Quadtree{
             Children = (topLeft, topRight, bottomLeft, bottomRight);
         }
 
+        public void merge(){
+            // Check if still above error threshold
+            double errorValue = tree.thresholdMethod switch
+            {
+                1 => this.errorVariance(),
+                2 => this.errorMAD(),
+                3 => this.errorMaxPixDiff(),
+                4 => this.errorEntropy(),
+                5 => this.errorSSIM(),
+                _ => this.errorVariance()
+            };
+
+            if (errorValue <= tree.errorThreshold)
+            {
+                this.removeChildren();
+                this.IsLeaf = true;
+                tree.leafNodes.Add(this);
+                tree.leafCount += 1;
+                return;
+            }
+        }
+
+        public void removeChildren(){
+            // Procedure to remove children of a node
+            if (this.IsLeaf || this.Children == null) {
+                tree.leafNodes.Remove(this);
+                tree.leafCount -= 1;
+                return;
+            }
+
+            (QuadtreeNode topLeft, QuadtreeNode topRight, QuadtreeNode bottomLeft, QuadtreeNode bottomRight) = this.Children.Value;
+            topLeft.removeChildren();
+            topRight.removeChildren();
+            bottomLeft.removeChildren();
+            bottomRight.removeChildren();
+            this.Children = null;
+        }
+
         public double errorVariance(){
+            // Error measurement using Variance of the three color channels
             double N = Width * Height;
             var (meanR, meanG, meanB) = colorMean();
             
@@ -117,7 +161,9 @@ namespace Quadtree{
             double result = (varianceR + varianceG + varianceB) / 3;
             return result;
         }
+
         public double errorMAD(){
+            // Error measurement using Mean Absolute Deviation of the three color channels
             double N = Width * Height;
             var (meanR, meanG, meanB) = colorMean();
             
@@ -140,7 +186,9 @@ namespace Quadtree{
             double result = (madR + madG + madB) / 3;
             return result;
         }
+
         public double errorMaxPixDiff(){
+            // Error measurement using Max Pixel Difference of the three color channels
             double maxR = tree.GetPixel(0, 0, TopLeft).R;
             double maxG = tree.GetPixel(0, 0, TopLeft).G;
             double maxB = tree.GetPixel(0, 0, TopLeft).B;
@@ -170,7 +218,9 @@ namespace Quadtree{
             double result = (diffR + diffG + diffB) / 3;
             return result; 
         }
+
         public double errorEntropy(){
+            // Error measurement using entropy of the three color channels
             double N = Width * Height;
 
             int[] redCount = new int[256];
@@ -211,10 +261,43 @@ namespace Quadtree{
             double result = (redEntropy + greenEntropy + blueEntropy) / 3;
             return result;
         }
+
         public double errorSSIM(){
-            return 0;
+            // Error measurement using ...
+            const double C2 = 58.5225;
+            const double WR = 0.2989;
+            const double WG = 0.5870;
+            const double WB = 0.1140;
+
+
+            double N = Width * Height;
+            var (meanR, meanG, meanB) = colorMean();
+            
+            double varianceR = 0;
+            double varianceG = 0;
+            double varianceB = 0;
+            
+            for (int i = 0; i < Width; i++){
+                for (int j = 0; j < Height; j++){
+                    varianceR += (tree.GetPixel(i, j, TopLeft).R - meanR) * (tree.GetPixel(i, j, TopLeft).R - meanR);
+                    varianceG += (tree.GetPixel(i, j, TopLeft).G - meanG) * (tree.GetPixel(i, j, TopLeft).G - meanG);
+                    varianceB += (tree.GetPixel(i, j, TopLeft).B - meanB) * (tree.GetPixel(i, j, TopLeft).B - meanB);
+                }
+            }
+            varianceR = varianceR / N;
+            varianceG = varianceG / N;
+            varianceB = varianceB / N;
+
+            double ssimR = (C2 / (C2 + varianceR));
+            double ssimG = (C2 / (C2 + varianceG));
+            double ssimB = (C2 / (C2 + varianceB));
+
+            double result = WR * ssimR + WG * ssimG + WB * ssimB;
+            return result;
         }
+
         public (double, double, double) colorMean(){
+            // Function to return the mean of each color channel in a node
             double N = Width * Height;
             double sumR = 0;
             double sumG = 0;
@@ -235,5 +318,6 @@ namespace Quadtree{
 
             return (meanR, meanG, meanB);
         }
+
     }
 }
