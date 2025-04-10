@@ -64,6 +64,47 @@ namespace Quadtree{
             buildTree(bottomRight);
         }
 
+        public void updateTree(QuadtreeNode r, double prevThreshold)
+        {
+            // Procedure to update Quadtree with the parameters given for image compression
+            if (this.errorThreshold > prevThreshold)
+            {
+                if (r.IsLeaf || r.Children == null)
+                {
+                    buildTree(r);
+                }
+                else
+                {
+                    (QuadtreeNode topLeft, QuadtreeNode topRight, QuadtreeNode bottomLeft, QuadtreeNode bottomRight) = r.Children.Value;
+                    updateTree(topLeft, prevThreshold);
+                    updateTree(topRight, prevThreshold);
+                    updateTree(bottomLeft, prevThreshold);
+                    updateTree(bottomRight, prevThreshold);
+                }
+            }
+            else
+            {
+                if (r.IsLeaf || r.Children == null)
+                {
+                    return;
+                }
+                else
+                {
+                    r.merge();
+
+                    if (r.IsLeaf || r.Children == null){
+                        return;
+                    }
+
+                    (QuadtreeNode topLeft, QuadtreeNode topRight, QuadtreeNode bottomLeft, QuadtreeNode bottomRight) = r.Children.Value;
+                    updateTree(topLeft, prevThreshold);
+                    updateTree(topRight, prevThreshold);
+                    updateTree(bottomLeft, prevThreshold);
+                    updateTree(bottomRight, prevThreshold);
+                }
+            }
+        }
+
         public Rgba32[,] CreateImage()
         {
             // Function that creates the compressed image based on the Quadtree that is built
