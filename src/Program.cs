@@ -61,10 +61,8 @@ class Program
             startTimeImage = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
 
             int dimensions = image.GetLength(0) * image.GetLength(1);
-            Console.WriteLine("Minimum block : " + (minimumBlock).ToString());
 
             // Binary search
-            
             for (minimumBlock = (int) (dimensions * 0.0001); minimumBlock >= 1; minimumBlock /= 4) {
                 double leftBound = 0;
                 double rightBound = errorMethod switch {
@@ -89,8 +87,6 @@ class Program
                     long tempSize = new FileInfo(imageOutputPath).Length;
                     tempPercentage = (1 - (float) tempSize / (float) oriFileSize);
 
-                    Console.WriteLine("Trying : " + threshold.ToString() + ", " + tempPercentage.ToString() + " -> " + targetCompression.ToString());
-
                     if (MathF.Abs(tempPercentage - targetCompression) < TARGET_RANGE || itr >= 10)
                         break;
                     else if (targetCompression > tempPercentage) {
@@ -102,7 +98,6 @@ class Program
 
                     threshold = leftBound + (rightBound - leftBound) / 2;
                     t.updateThreshold(threshold);
-                    Console.WriteLine(t.maxDepth + ", " + t.nodeCount + ", " + t.leafCount);
 
                     itr++;
                 }
@@ -112,6 +107,7 @@ class Program
             }
             endTimeImage = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
         }
+
         // GIF processing
         QuadtreeArray ta = new QuadtreeArray(image, oriFileSize, InputHandler.getImageExtensionNum());
         ta.CreateGIFImages(t);
@@ -134,6 +130,10 @@ class Program
 
         Console.WriteLine("Waktu eksekusi gambar: " + (endTimeImage - startTimeImage) + " ms");
         Console.WriteLine("Waktu eksekusi GIF: " + (gifExecutionTime) + " ms");
+        if (targetCompression != 0) {
+            Console.WriteLine("Ambang atas error: " + threshold);
+            Console.WriteLine("Ukuran blok minimum: " + minimumBlock);
+        }
         Console.WriteLine("Kedalaman Pohon: " + t.maxDepth);
         Console.WriteLine("Jumlah Simpul: " + t.nodeCount);
         Console.WriteLine("Jumlah Daun: " + t.leafCount);
