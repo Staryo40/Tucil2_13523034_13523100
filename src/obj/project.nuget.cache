@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "dgSpecHash": "OU101w9NIbo=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\Aryo\\PersonalMade\\ITB Kuliah Semesteran\\Semester 4\\Strategi Algoritma\\Tucil-Tubes 2025\\Tucil2_13523034_13523100\\src\\src.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\Aryo\\.nuget\\packages\\sixlabors.fonts\\2.0.8\\sixlabors.fonts.2.0.8.nupkg.sha512",
+    "C:\\Users\\Aryo\\.nuget\\packages\\sixlabors.imagesharp\\3.1.7\\sixlabors.imagesharp.3.1.7.nupkg.sha512",
+    "C:\\Users\\Aryo\\.nuget\\packages\\sixlabors.imagesharp.drawing\\2.1.5\\sixlabors.imagesharp.drawing.2.1.5.nupkg.sha512"
+  ],
+  "logs": []
+}
