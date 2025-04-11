@@ -33,7 +33,6 @@ namespace IOHandler
 
                 if (absolutePath == null)
                 {
-                    // Console.WriteLine("Input tidak valid, harap masukkan alamat yang valid.");
                     InputError = "Input tidak valid, harap masukkan alamat yang valid.";
                     continue;
                 }
@@ -42,7 +41,6 @@ namespace IOHandler
                 {
                     if (!File.Exists(absolutePath))
                     {
-                        // Console.WriteLine("Gambar tidak ditemukan!");
                         InputError = "Gambar tidak ditemukan!";
                         continue;
                     }
@@ -50,7 +48,6 @@ namespace IOHandler
                     string extension = Path.GetExtension(absolutePath).ToLower();
                     if (extension != ".png" && extension == ".jpg" && extension == ".jpeg")
                     {
-                        // Console.WriteLine("Format file tidak didukung! Harap gunakan .png, .jpg, atau .jpeg.");
                         InputError = "Format file tidak didukung! Harap gunakan .png, .jpg, atau .jpeg.";
                         continue;
                     }
@@ -78,7 +75,6 @@ namespace IOHandler
                 }
                 catch
                 {
-                    Console.WriteLine("Input tidak valid, harap masukkan alamat yang valid.");
                     InputError = "Input tidak valid, harap masukkan alamat yang valid.";
                     continue;
                 }
@@ -111,7 +107,6 @@ namespace IOHandler
                 
                 if (input == null)
                 {
-                    // Console.WriteLine("Input tidak valid, harap masukkan angka yang valid.");
                     InputError = "Input tidak valid, harap masukkan angka yang valid.";
                     continue;
                 }
@@ -137,8 +132,7 @@ namespace IOHandler
                 }
                 catch
                 {
-                    // Console.WriteLine("Input tidak valid, harap masukkan alamat yang valid.");
-                    InputError = "Input tidak valid, harap masukkan alamat yang valid.";
+                    InputError = "Input tidak valid, harap masukkan angka yang valid dalam range 1-5.";
                     continue;
                 }
             }
@@ -182,7 +176,7 @@ namespace IOHandler
                 }
                 catch
                 {
-                    InputError = "Input tidak valid, harap masukkan alamat yang valid.";
+                    InputError = "Input tidak valid, harap masukkan angka yang valid.";
                     continue;
                 }
             }
@@ -220,7 +214,7 @@ namespace IOHandler
                 }
                 catch
                 {
-                    InputError = "Input tidak valid, harap masukkan alamat yang valid.";
+                    InputError = "Input tidak valid, harap masukkan angka yang valid.";
                     continue;
                 }
             }
@@ -241,6 +235,9 @@ namespace IOHandler
                 Console.WriteLine("Inputlah dalam range 0-1 dengan 0 berarti mematikan target kompresi.");
                 Console.WriteLine("Walaupun range 0 hingga 1, terdapat range yang tidak dapat dicapai oleh kompresi.");
                 Console.WriteLine("Dalam kasus tersebut, program akan menampilkan nilai minimal/maximal yang mendekati nilai tersebut.");
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("Pakai koma (,) jika titik (.) tidak bisa dan sebaliknya");
+                Console.ResetColor();
                 Console.WriteLine("");
 
                  if (InputError != ""){
@@ -259,6 +256,11 @@ namespace IOHandler
                 {
                     value = Convert.ToSingle(input);
 
+                    if (value < 0 || value > 1){
+                        InputError = "Input tidak valid, tidak dalam range 0-1";
+                        continue;
+                    }
+
                     InputError = "";
                     CompressionRateTarget = value;
 
@@ -266,7 +268,7 @@ namespace IOHandler
                 }
                 catch
                 {
-                    InputError = "Input tidak valid, harap masukkan alamat yang valid.";
+                    InputError = "Input tidak valid, harap angka yang valid dalam range 0-1.";
                     continue;
                 }
             }
@@ -300,7 +302,7 @@ namespace IOHandler
                     }
                     else if (!absolutePath.EndsWith(extension, StringComparison.OrdinalIgnoreCase))
                     {
-                        InputError = "Ekstensi file tidak sesuai!";
+                        InputError = "Ekstensi file tidak sesuai! Pastikan berekstensi " + extension;
                         continue;
                     }
 
@@ -359,31 +361,28 @@ namespace IOHandler
         {
             Console.WriteLine(InputError);
         }
-        public static void ShowLoopingProgressBar(string message, CancellationToken token)
+        public static void ShowLoadingBar(CancellationToken token)
         {
-            int width = 30;
-            int position = 0;
+            int current = 1;
+            int total = 50;
 
             while (!token.IsCancellationRequested)
             {
-                string bar = new string('■', position).PadRight(width, ' ');
-                Console.SetCursorPosition(0, Console.CursorTop);
-                Console.Write($"{message} [{bar}]");
+                string bar = new string('■', current);
+                Console.Write($"\rCurrently processing image: [{bar.PadRight(total)}]");
 
-                Thread.Sleep(50);
+                current++;
+                if (current > total)
+                    current = 1;
 
-                position++;
-
-                if (position > width)
-                {
-                    position = 0;
-                    Thread.Sleep(200); 
-                }
+                Thread.Sleep(100); 
             }
 
-            Console.SetCursorPosition(0, Console.CursorTop);
-            Console.Write(new string(' ', Console.WindowWidth));
-            Console.SetCursorPosition(0, Console.CursorTop);
+            Console.Write("\r" + new string(' ', 100) + "\r");
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.Write("Image processing finished!");
+            Console.ResetColor();
+            Console.WriteLine("");
         }
         public static int getImageExtensionNum(){
             if (ImageExtensionType == ".jpeg" || ImageExtensionType == ".jpg"){

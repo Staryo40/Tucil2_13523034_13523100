@@ -40,6 +40,10 @@ namespace Quadtree{
                 string bar = new string('■', current);
                 Console.Write($"\rCurrently completed GIF images: [{bar.PadRight(total)}] {current}/{total}");
             }
+            Console.Write("\r" + new string(' ', 100) + "\r");
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.Write("GIF processing finished!");
+            Console.ResetColor();
             Console.WriteLine("");
         }
 

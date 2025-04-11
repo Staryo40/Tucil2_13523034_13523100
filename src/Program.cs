@@ -48,20 +48,29 @@ class Program
 
         if (targetCompression == 0){ // NO compression target
             // Image processing
-            startTimeImage = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+            var cts = new CancellationTokenSource();
+            CancellationToken token = cts.Token;
+            Thread loadingThread = new Thread(() => InputHandler.ShowLoadingBar(token));
+            loadingThread.Start();
 
+            startTimeImage = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
             t = new QuadtreeTree(image, image.GetLength(0), image.GetLength(1), minimumBlock, errorMethod, threshold);
             outputArray = t.CreateImage();
-
             endTimeImage = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+
+            cts.Cancel();
+            loadingThread.Join();
         } else { // Compression target
             // Image Processing
             Console.WriteLine("Pemrosesan image akan lebih lama dengan fitur target compression");
+            var cts = new CancellationTokenSource();
+            CancellationToken token = cts.Token;
+            Thread loadingThread = new Thread(() => InputHandler.ShowLoadingBar(token));
+            loadingThread.Start();
 
             startTimeImage = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
 
             int dimensions = image.GetLength(0) * image.GetLength(1);
-
             // Binary search
             for (minimumBlock = (int) (dimensions * 0.0001); minimumBlock >= 1; minimumBlock /= 4) {
                 double leftBound = 0;
@@ -106,6 +115,9 @@ class Program
                 if (MathF.Abs(tempPercentage - targetCompression) < TARGET_RANGE) break;
             }
             endTimeImage = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+
+            cts.Cancel();
+            loadingThread.Join();
         }
 
         // GIF processing
@@ -129,7 +141,10 @@ class Program
         OutputHandler.SaveGIF(gifOutputPath, ta.Buffer);
 
         Console.WriteLine("Waktu eksekusi gambar: " + (endTimeImage - startTimeImage) + " ms");
-        Console.WriteLine("Waktu eksekusi GIF: " + (gifExecutionTime) + " ms");
+        Console.WriteLine("Waktu eksekusi GIF: " + gifExecutionTime + " ms");
+
+        Console.WriteLine("");
+
         if (targetCompression != 0) {
             Console.WriteLine("Ambang atas error: " + threshold);
             Console.WriteLine("Ukuran blok minimum: " + minimumBlock);
@@ -138,6 +153,8 @@ class Program
         Console.WriteLine("Jumlah Simpul: " + t.nodeCount);
         Console.WriteLine("Jumlah Daun: " + t.leafCount);
 
+        Console.WriteLine("");
+
         Console.WriteLine("Ukuran file gambar sebelum kompresi: " + oriFileSize + " bytes");
 
         long compFileSize = new FileInfo(imageOutputPath).Length;
@@ -145,7 +162,7 @@ class Program
 
         float compPercentage = (1 - (float) compFileSize / (float) oriFileSize) * 100f;
         if (targetCompression != 0){
-            Console.WriteLine("Target kompresi: " + targetCompression + "%");
+            Console.WriteLine("Target kompresi: " + targetCompression * 100 + "%");
         }
         Console.WriteLine("Persentase kompresi: " + compPercentage + "%");
 
