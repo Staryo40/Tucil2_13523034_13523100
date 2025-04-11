@@ -46,7 +46,7 @@ namespace IOHandler
                     }
 
                     string extension = Path.GetExtension(absolutePath).ToLower();
-                    if (extension != ".png" && extension == ".jpg" && extension == ".jpeg")
+                    if (extension != ".png" && extension != ".jpg" && extension != ".jpeg")
                     {
                         InputError = "Format file tidak didukung! Harap gunakan .png, .jpg, atau .jpeg.";
                         continue;
