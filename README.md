@@ -4,7 +4,7 @@ Image compression and processing is an essential procedure to do in the current 
 
 This program is a showcase of the Divide and Conquer algorithm, an algorithm that divides the problem to smaller but similar problems and at the end combines the solution of these small problems to ultimately find the solution of the original problem.
 <p align="center">
-<img src="https://drive.google.com/uc?id=1vtseOj9vZj0McUQO74cHMdjysua_ojMy" alt="Example input interface" width="500"/>
+<img src="https://github.com/user-attachments/assets/2f5b06a0-1e6f-40c6-bab2-fb31412a9541" alt="Example GIF of image compression" width="500"/>
 </p>
 
 ## Program Requirements
