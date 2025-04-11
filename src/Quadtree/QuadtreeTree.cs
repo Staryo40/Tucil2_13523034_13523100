@@ -18,6 +18,7 @@ namespace Quadtree{
         public int leafCount { get; set; }
         public int maxDepth { get; set; }
         public List<QuadtreeNode> leafNodes { get; set; }
+        public double completionPercentage { get; private set;}
         
         public QuadtreeTree(Rgba32[,] i, int width, int height, int mb, int tm, double t){
             // User-defined Constructor
@@ -30,6 +31,7 @@ namespace Quadtree{
             this.leafCount = 0;
             this.maxDepth = 0;
             this.leafNodes = new List<QuadtreeNode>();
+            completionPercentage = 0;
 
             buildTree(root);
         }
@@ -65,6 +67,7 @@ namespace Quadtree{
         }
 
         public void updateThreshold(double t){
+            ResetCompletionPercentage();
             double prevThreshold = errorThreshold;
             errorThreshold = t;
             updateNodeThreshold(root, prevThreshold);
@@ -95,6 +98,7 @@ namespace Quadtree{
             {
                 if (r.IsLeaf || r.Children == null)
                 {
+                    AddCompletionPercentage(r.Depth);
                     return;
                 }
                 else
@@ -180,6 +184,15 @@ namespace Quadtree{
             }
 
             return image;
+        }
+
+        public void ResetCompletionPercentage() => completionPercentage = 0;
+
+        public void AddCompletionPercentage(int leafDepth) {
+            double percentage = (double) 100 / Math.Pow(4, leafDepth);
+            completionPercentage += percentage;
+            string bar = new string('■', (int) (completionPercentage / 10));
+            Console.Write($"\rProcessing image: [{bar.PadRight(10)}] {(int) (completionPercentage), 3}%");
         }
 
         private List<QuadtreeNode> GetLeafNodesAtDepth(int depth)

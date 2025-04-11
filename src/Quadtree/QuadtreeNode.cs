@@ -63,6 +63,7 @@ namespace Quadtree{
                 this.IsLeaf = true;
                 tree.leafNodes.Add(this);
                 tree.leafCount += 1;
+                tree.AddCompletionPercentage(Depth);
                 return;
             }
             
@@ -82,6 +83,7 @@ namespace Quadtree{
                 this.IsLeaf = true;
                 tree.leafNodes.Add(this);
                 tree.leafCount += 1;
+                tree.AddCompletionPercentage(Depth);
                 return;
             }
             
@@ -117,6 +119,7 @@ namespace Quadtree{
                 this.IsLeaf = true;
                 tree.leafNodes.Add(this);
                 tree.leafCount += 1;
+                tree.AddCompletionPercentage(Depth);
                 return;
             }
         }
