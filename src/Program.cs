@@ -10,7 +10,7 @@ class Program
     const int MAX_SEARCH = 10;
     const float TARGET_RANGE = 0.01f;
     const double MAX_POSSIBLE_VARIANCE = 16256.25;
-    const double MAX_POSSIBLE_MAD = 63.75;
+    const double MAX_POSSIBLE_MAD = 127.5;
     const double MAX_POSSIBLE_MVP = 255;
     const double MAX_POSSIBLE_ENTROPY = 8;
     const double MAX_POSSIBLE_SSIM = 1;

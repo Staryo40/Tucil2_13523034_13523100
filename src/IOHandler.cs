@@ -308,6 +308,11 @@ namespace IOHandler
 
                     string? directory = Path.GetDirectoryName(absolutePath);
 
+                    if (absolutePath == InputAddress){
+                        InputError = "Alamat output tidak boleh sama dengan alamat input, silakan input lagi!";
+                        continue;
+                    }
+
                     if (directory == null || !Directory.Exists(directory))
                     {
                         InputError = "Direktori tidak ditemukan!";
