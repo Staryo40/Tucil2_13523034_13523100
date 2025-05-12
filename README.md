@@ -8,7 +8,7 @@ This program is a showcase of the Divide and Conquer algorithm, an algorithm tha
 </p>
 
 ## Program Requirements
-1. .NET SDK (JRE) 
+1. .NET SDK
 2. SixLabors.ImageSharp Library  
 ## Compiling the Program
 Navigate to the directory that contains bin, doc, src, and test (root directory)
